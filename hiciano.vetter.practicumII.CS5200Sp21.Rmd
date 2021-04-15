@@ -71,24 +71,62 @@ fpn <- paste0(path,xmlFile)
 
 xml_data <- xmlParse(file = fpn)
 nodes <- getNodeSet(xml_data, "//PubmedArticle") 
-xmlRoot <- xmlRoot(xml_data)
+r <- xmlRoot(xml_data)
 
 # Get the name of the node to confirm
-xmlName(xmlRoot)
+xmlName(r)
 #PubmedArticleSet
 
-xmlSize(xmlRoot)
-#19 pubmedArticle tags
+#get number of children of root, number of pubMedArticles (19)
+numPubMeds <- xmlSize(r)
+
+#PUBdf <- data.frame()
+
+# lnodes <- xmlToList(xml_data)
+# lnodes
+
+
+
 
 ```
 
 
 ```{r}
+#PubmedArticle child nodes-> MedlineCitation, PubmedData
+#MedlineCitation -> PMID, DateCreated, DateCompleted, DateRevised, Article, MedlineJournalnfo, OtherID, KeywordList
 
+#use xpath to set MedlineCitation's first child node = PMID
+pmid <- xpathSApply(xml_data,"//MedlineCitation/PMID", xmlValue)
+pmid
 
+#MedlineCitation second child node = DateCreated -> Year, Month, Day
+yearCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Year/node()", xmlValue)
+yearCreated
+
+monthCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Month", xmlValue)
+monthCreated
+
+dayCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Day", xmlValue)
+dayCreated
 
 
 ```
+
+
+```{r}
+#dateCompleted -  MedlineCitation's second child node/tag
+yearCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Year", xmlValue)
+yearCompleted
+monthCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted//Month", xmlValue)
+monthCompleted
+dayCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Day", xmlValue)
+dayCompleted
+
+dateComp <- mapply(paste, yearCompleted, monthCompleted, dayCompleted, collapse = "")
+dateComp
+
+```
+
 
 
 ```{r}
