@@ -92,6 +92,10 @@ numPubMeds <- xmlSize(r)
 
 
 ```{r}
+
+#will try prealloacing memory for xml nodes (class module example)
+
+
 #PubmedArticle child nodes-> MedlineCitation, PubmedData
 #MedlineCitation -> PMID, DateCreated, DateCompleted, DateRevised, Article, MedlineJournalnfo, OtherID, KeywordList
 
