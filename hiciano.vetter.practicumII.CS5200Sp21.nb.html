@@ -239,22 +239,129 @@ summary {
 <!-- rnb-text-begin -->
 <p>This is an <a href="http://rmarkdown.rstudio.com">R Markdown</a> Notebook. When you execute code within the notebook, the results appear beneath the code.</p>
 <p>Try executing this chunk by clicking the <em>Run</em> button within the chunk or by placing your cursor inside it and pressing <em>Cmd+Shift+Enter</em>.</p>
+<div id="part-1-load-xml-create-a-normalized-relational-oltp-database" class="section level3">
+<h3>Part 1 Load XML: Create a normalized relational OLTP database</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShSU1FMaXRlKVxubGlicmFyeShYTUwpXG5saWJyYXJ5KERCSSlcblxuXG5cbmBgYCJ9 -->
-<pre class="r"><code>library(RSQLite)
-library(XML)
-library(DBI)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3BhY21hbiAocGFja2FnZSBtYW5hZ2VyKSBpbnN0YWxscyBhbmQgbG9hZHMgcGFja2FnZXMgaWYgbm90IGluc3RhbGxlZFxucGFjbWFuOjpwX2xvYWQocGFjbWFuLCBSU1FMaXRlLCBYTUwsIERCSSwgdGlkeXZlcnNlKVxuXG4jY3JlYXRlIGRiIHRvIHNldCBzY2hlbWEgYW5kIGxvYWQgZGF0YSB0b1xuZGJzIDwtIGRiQ29ubmVjdChSU1FMaXRlOjpTUUxpdGUoKSwgXCJwdWJNZWQuZGJcIilcblxuYGBgIn0= -->
+<pre class="r"><code>#pacman (package manager) installs and loads packages if not installed
+pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse)
+
+#create db to set schema and load data to
+dbs &lt;- dbConnect(RSQLite::SQLite(), &quot;pubMed.db&quot;)
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIExhbmd1YWdlIChcbiAgaWRMYW5ndWFnZSBJTlRFR0VSIE5PVCBOVUxMLFxuICBMYW5ndWFnZSBURVhUIE5PVCBOVUxMLFxuICBQUklNQVJZIEtFWSAoaWRMYW5ndWFnZSkpO1xuXG5gYGAifQ== -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS Language (
+  idLanguage INTEGER NOT NULL,
+  Language TEXT NOT NULL,
+  PRIMARY KEY (idLanguage));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIFBhZ2luYXRpb24gKFxuICBwYWdpbmF0aW9uSWQgSU5URUdFUiBOT1QgTlVMTCxcbiAgTWVkbGluZVBnbiBURVhUIE5PVCBOVUxMLFxuICBQUklNQVJZIEtFWSAocGFnaW5hdGlvbklkKSk7XG5cbmBgYCJ9 -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS Pagination (
+  paginationId INTEGER NOT NULL,
+  MedlinePgn TEXT NOT NULL,
+  PRIMARY KEY (paginationId));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIEhpc3RvcnkgKFxuICBoaXN0b3J5SWQgSU5URUdFUiBOT1QgTlVMTCxcbiAgUFJJTUFSWSBLRVkgKGhpc3RvcnlJZCkpO1xuXG5gYGAifQ== -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS History (
+  historyId INTEGER NOT NULL,
+  PRIMARY KEY (historyId));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIHB1YkRhdGUgKFxuICBwdWJEYXRlSWQgSU5URUdFUiBOT1QgTlVMTCxcbiAgeWVhciBJTlRFR0VSIE5PVCBOVUxMLCBcbiAgbW9udGggSU5URUdFUiBOT1QgTlVMTCxcbiAgUFJJTUFSWSBLRVkgKHB1YkRhdGVJZCkpO1xuXG5gYGAifQ== -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS pubDate (
+  pubDateId INTEGER NOT NULL,
+  year INTEGER NOT NULL, 
+  month INTEGER NOT NULL,
+  PRIMARY KEY (pubDateId));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="part-1-populate-relational-database-with-data-from-an-xml-document" class="section level3">
+<h3>Part 1 Populate relational database with data from an XML document</h3>
+</div>
+<div id="part-2-add-to-the-normalized-schema-fact-tables-and-turn-the-normalized-schema-into-a-denormalized-schema-suitable-for-olap" class="section level3">
+<h3>Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5wYXRoIDwtIFwiL1VzZXJzL2plYW5uaWxsZS9yZXBvcy9taW5lX2FfZGF0YWJhc2UvXCJcbnhtbEZpbGUgPC0gXCJwdWJtZWRfc2FtcGxlLnhtbFwiXG5mcG4gPC0gcGFzdGUwKHBhdGgseG1sRmlsZSlcblxueG1sX2RhdGEgPC0geG1sUGFyc2UoZmlsZSA9IGZwbilcbm5vZGVzIDwtIGdldE5vZGVTZXQoeG1sX2RhdGEsIFwiLy9QdWJtZWRBcnRpY2xlXCIpIFxueG1sUm9vdCA8LSB4bWxSb290KHhtbF9kYXRhKVxuXG4jIEdldCB0aGUgbmFtZSBvZiB0aGUgbm9kZSB0byBjb25maXJtXG54bWxOYW1lKHhtbFJvb3QpXG5gYGAifQ== -->
+<pre class="r"><code>
+path &lt;- &quot;/Users/jeannille/repos/mine_a_database/&quot;
+xmlFile &lt;- &quot;pubmed_sample.xml&quot;
+fpn &lt;- paste0(path,xmlFile)
+
+xml_data &lt;- xmlParse(file = fpn)
+nodes &lt;- getNodeSet(xml_data, &quot;//PubmedArticle&quot;) 
+xmlRoot &lt;- xmlRoot(xml_data)
+
+# Get the name of the node to confirm
+xmlName(xmlRoot)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiUHVibWVkQXJ0aWNsZVNldFwiXG4ifQ== -->
+<pre><code>[1] &quot;PubmedArticleSet&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1B1Ym1lZEFydGljbGVTZXRcblxueG1sU2l6ZSh4bWxSb290KVxuYGBgIn0= -->
+<pre class="r"><code>#PubmedArticleSet
+
+xmlSize(xmlRoot)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDE5XG4ifQ== -->
+<pre><code>[1] 19</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIzE5IHB1Ym1lZEFydGljbGUgdGFnc1xuXG5gYGAifQ== -->
+<pre class="r"><code>#19 pubmedArticle tags
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5kYkRpc2Nvbm5lY3QoZGJzKVxuXG5gYGAifQ== -->
+<pre class="r"><code>
+dbDisconnect(dbs)
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="part-3-use-the-olap-starsnowflake-schema-to-do-some-simple-data-mining" class="section level3">
+<h3>Part 3 use the OLAP star/snowflake schema to do some (simple) data mining</h3>
 <p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the toolbar or by pressing <em>Cmd+Option+I</em>.</p>
 <p>When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the <em>Preview</em> button or press <em>Cmd+Shift+K</em> to preview the HTML file).</p>
 <p>The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.</p>
 <!-- rnb-text-end -->
+</div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiUHJhY3RpY3VtIElJIC0gTWluZSBhIERhdGFiYXNlLCBDUzUyMDAgU3ByaW5nIDIwMjEiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KClRoaXMgaXMgYW4gW1IgTWFya2Rvd25dKGh0dHA6Ly9ybWFya2Rvd24ucnN0dWRpby5jb20pIE5vdGVib29rLiBXaGVuIHlvdSBleGVjdXRlIGNvZGUgd2l0aGluIHRoZSBub3RlYm9vaywgdGhlIHJlc3VsdHMgYXBwZWFyIGJlbmVhdGggdGhlIGNvZGUuIAoKVHJ5IGV4ZWN1dGluZyB0aGlzIGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqUnVuKiBidXR0b24gd2l0aGluIHRoZSBjaHVuayBvciBieSBwbGFjaW5nIHlvdXIgY3Vyc29yIGluc2lkZSBpdCBhbmQgcHJlc3NpbmcgKkNtZCtTaGlmdCtFbnRlciouIAoKYGBge3J9CmxpYnJhcnkoUlNRTGl0ZSkKbGlicmFyeShYTUwpCmxpYnJhcnkoREJJKQoKCgpgYGAKCkFkZCBhIG5ldyBjaHVuayBieSBjbGlja2luZyB0aGUgKkluc2VydCBDaHVuayogYnV0dG9uIG9uIHRoZSB0b29sYmFyIG9yIGJ5IHByZXNzaW5nICpDbWQrT3B0aW9uK0kqLgoKV2hlbiB5b3Ugc2F2ZSB0aGUgbm90ZWJvb2ssIGFuIEhUTUwgZmlsZSBjb250YWluaW5nIHRoZSBjb2RlIGFuZCBvdXRwdXQgd2lsbCBiZSBzYXZlZCBhbG9uZ3NpZGUgaXQgKGNsaWNrIHRoZSAqUHJldmlldyogYnV0dG9uIG9yIHByZXNzICpDbWQrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4gCgpUaGUgcHJldmlldyBzaG93cyB5b3UgYSByZW5kZXJlZCBIVE1MIGNvcHkgb2YgdGhlIGNvbnRlbnRzIG9mIHRoZSBlZGl0b3IuIENvbnNlcXVlbnRseSwgdW5saWtlICpLbml0KiwgKlByZXZpZXcqIGRvZXMgbm90IHJ1biBhbnkgUiBjb2RlIGNodW5rcy4gSW5zdGVhZCwgdGhlIG91dHB1dCBvZiB0aGUgY2h1bmsgd2hlbiBpdCB3YXMgbGFzdCBydW4gaW4gdGhlIGVkaXRvciBpcyBkaXNwbGF5ZWQuCgo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUHJhY3RpY3VtIElJIC0gTWluZSBhIERhdGFiYXNlLCBDUzUyMDAgU3ByaW5nIDIwMjEiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KClRoaXMgaXMgYW4gW1IgTWFya2Rvd25dKGh0dHA6Ly9ybWFya2Rvd24ucnN0dWRpby5jb20pIE5vdGVib29rLiBXaGVuIHlvdSBleGVjdXRlIGNvZGUgd2l0aGluIHRoZSBub3RlYm9vaywgdGhlIHJlc3VsdHMgYXBwZWFyIGJlbmVhdGggdGhlIGNvZGUuIAoKVHJ5IGV4ZWN1dGluZyB0aGlzIGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqUnVuKiBidXR0b24gd2l0aGluIHRoZSBjaHVuayBvciBieSBwbGFjaW5nIHlvdXIgY3Vyc29yIGluc2lkZSBpdCBhbmQgcHJlc3NpbmcgKkNtZCtTaGlmdCtFbnRlciouIAoKCiMjIyBQYXJ0IDEgTG9hZCBYTUw6IENyZWF0ZSBhIG5vcm1hbGl6ZWQgcmVsYXRpb25hbCBPTFRQIGRhdGFiYXNlCmBgYHtyfQojcGFjbWFuIChwYWNrYWdlIG1hbmFnZXIpIGluc3RhbGxzIGFuZCBsb2FkcyBwYWNrYWdlcyBpZiBub3QgaW5zdGFsbGVkCnBhY21hbjo6cF9sb2FkKHBhY21hbiwgUlNRTGl0ZSwgWE1MLCBEQkksIHRpZHl2ZXJzZSkKCiNjcmVhdGUgZGIgdG8gc2V0IHNjaGVtYSBhbmQgbG9hZCBkYXRhIHRvCmRicyA8LSBkYkNvbm5lY3QoUlNRTGl0ZTo6U1FMaXRlKCksICJwdWJNZWQuZGIiKQoKYGBgCgoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBMYW5ndWFnZSAoCiAgaWRMYW5ndWFnZSBJTlRFR0VSIE5PVCBOVUxMLAogIExhbmd1YWdlIFRFWFQgTk9UIE5VTEwsCiAgUFJJTUFSWSBLRVkgKGlkTGFuZ3VhZ2UpKTsKCmBgYAoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBQYWdpbmF0aW9uICgKICBwYWdpbmF0aW9uSWQgSU5URUdFUiBOT1QgTlVMTCwKICBNZWRsaW5lUGduIFRFWFQgTk9UIE5VTEwsCiAgUFJJTUFSWSBLRVkgKHBhZ2luYXRpb25JZCkpOwoKYGBgCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKQ1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgSGlzdG9yeSAoCiAgaGlzdG9yeUlkIElOVEVHRVIgTk9UIE5VTEwsCiAgUFJJTUFSWSBLRVkgKGhpc3RvcnlJZCkpOwoKYGBgCgoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KCkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIHB1YkRhdGUgKAogIHB1YkRhdGVJZCBJTlRFR0VSIE5PVCBOVUxMLAogIHllYXIgSU5URUdFUiBOT1QgTlVMTCwgCiAgbW9udGggSU5URUdFUiBOT1QgTlVMTCwKICBQUklNQVJZIEtFWSAocHViRGF0ZUlkKSk7CgpgYGAKCgojIyMgUGFydCAxIFBvcHVsYXRlIHJlbGF0aW9uYWwgZGF0YWJhc2Ugd2l0aCBkYXRhIGZyb20gYW4gWE1MIGRvY3VtZW50CiMjIyBQYXJ0IDIgQWRkIHRvIHRoZSBub3JtYWxpemVkIHNjaGVtYSBmYWN0IHRhYmxlcyBhbmQgdHVybiB0aGUgbm9ybWFsaXplZCBzY2hlbWEgaW50byBhIGRlbm9ybWFsaXplZCBzY2hlbWEgc3VpdGFibGUgZm9yIE9MQVAKCgpgYGB7cn0KCnBhdGggPC0gIi9Vc2Vycy9qZWFubmlsbGUvcmVwb3MvbWluZV9hX2RhdGFiYXNlLyIKeG1sRmlsZSA8LSAicHVibWVkX3NhbXBsZS54bWwiCmZwbiA8LSBwYXN0ZTAocGF0aCx4bWxGaWxlKQoKeG1sX2RhdGEgPC0geG1sUGFyc2UoZmlsZSA9IGZwbikKbm9kZXMgPC0gZ2V0Tm9kZVNldCh4bWxfZGF0YSwgIi8vUHVibWVkQXJ0aWNsZSIpIAp4bWxSb290IDwtIHhtbFJvb3QoeG1sX2RhdGEpCgojIEdldCB0aGUgbmFtZSBvZiB0aGUgbm9kZSB0byBjb25maXJtCnhtbE5hbWUoeG1sUm9vdCkKI1B1Ym1lZEFydGljbGVTZXQKCnhtbFNpemUoeG1sUm9vdCkKIzE5IHB1Ym1lZEFydGljbGUgdGFncwoKYGBgCgoKYGBge3J9CgoKCgpgYGAKCgpgYGB7cn0KCmRiRGlzY29ubmVjdChkYnMpCgpgYGAKCgojIyMgUGFydCAzIHVzZSB0aGUgT0xBUCBzdGFyL3Nub3dmbGFrZSBzY2hlbWEgdG8gZG8gc29tZSAoc2ltcGxlKSBkYXRhIG1pbmluZwoKCkFkZCBhIG5ldyBjaHVuayBieSBjbGlja2luZyB0aGUgKkluc2VydCBDaHVuayogYnV0dG9uIG9uIHRoZSB0b29sYmFyIG9yIGJ5IHByZXNzaW5nICpDbWQrT3B0aW9uK0kqLgoKV2hlbiB5b3Ugc2F2ZSB0aGUgbm90ZWJvb2ssIGFuIEhUTUwgZmlsZSBjb250YWluaW5nIHRoZSBjb2RlIGFuZCBvdXRwdXQgd2lsbCBiZSBzYXZlZCBhbG9uZ3NpZGUgaXQgKGNsaWNrIHRoZSAqUHJldmlldyogYnV0dG9uIG9yIHByZXNzICpDbWQrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4gCgpUaGUgcHJldmlldyBzaG93cyB5b3UgYSByZW5kZXJlZCBIVE1MIGNvcHkgb2YgdGhlIGNvbnRlbnRzIG9mIHRoZSBlZGl0b3IuIENvbnNlcXVlbnRseSwgdW5saWtlICpLbml0KiwgKlByZXZpZXcqIGRvZXMgbm90IHJ1biBhbnkgUiBjb2RlIGNodW5rcy4gSW5zdGVhZCwgdGhlIG91dHB1dCBvZiB0aGUgY2h1bmsgd2hlbiBpdCB3YXMgbGFzdCBydW4gaW4gdGhlIGVkaXRvciBpcyBkaXNwbGF5ZWQuCgo=</div>
 
 
 

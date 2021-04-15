@@ -7,14 +7,99 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
 
+
+### Part 1 Load XML: Create a normalized relational OLTP database
 ```{r}
-library(RSQLite)
-library(XML)
-library(DBI)
+#pacman (package manager) installs and loads packages if not installed
+pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse)
+
+#create db to set schema and load data to
+dbs <- dbConnect(RSQLite::SQLite(), "pubMed.db")
+
+```
+
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS Language (
+  idLanguage INTEGER NOT NULL,
+  Language TEXT NOT NULL,
+  PRIMARY KEY (idLanguage));
+
+```
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS Pagination (
+  paginationId INTEGER NOT NULL,
+  MedlinePgn TEXT NOT NULL,
+  PRIMARY KEY (paginationId));
+
+```
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS History (
+  historyId INTEGER NOT NULL,
+  PRIMARY KEY (historyId));
+
+```
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS pubDate (
+  pubDateId INTEGER NOT NULL,
+  year INTEGER NOT NULL, 
+  month INTEGER NOT NULL,
+  PRIMARY KEY (pubDateId));
+
+```
+
+
+### Part 1 Populate relational database with data from an XML document
+### Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP
+
+
+```{r}
+
+path <- "/Users/jeannille/repos/mine_a_database/"
+xmlFile <- "pubmed_sample.xml"
+fpn <- paste0(path,xmlFile)
+
+xml_data <- xmlParse(file = fpn)
+nodes <- getNodeSet(xml_data, "//PubmedArticle") 
+xmlRoot <- xmlRoot(xml_data)
+
+# Get the name of the node to confirm
+xmlName(xmlRoot)
+#PubmedArticleSet
+
+xmlSize(xmlRoot)
+#19 pubmedArticle tags
+
+```
+
+
+```{r}
+
 
 
 
 ```
+
+
+```{r}
+
+dbDisconnect(dbs)
+
+```
+
+
+### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
