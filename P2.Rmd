@@ -1,0 +1,355 @@
+---
+title: "P2"
+output: html_document
+---
+
+### Part 1 Load XML: Create a normalized relational OLTP database
+```{r}
+#pacman (package manager) installs and loads packages if not installed
+pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse, xml2)
+#create db to set schema and load data to
+
+
+fpath = "C:/Users/brive/OneDrive/Desktop/DatabaseSystems/"
+dbfile = "pubMed.db" 
+
+dbs <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
+```
+
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Language (
+  idLanguage INTEGER NOT NULL,
+  Language TEXT NOT NULL,
+  PRIMARY KEY (idLanguage));
+```
+
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Pagination (
+  paginationId INTEGER NOT NULL,
+  MedlinePgn TEXT NOT NULL,
+  PRIMARY KEY (paginationId));
+```
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS History (
+  historyId INTEGER NOT NULL,
+  PRIMARY KEY (historyId));
+```
+
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS pubDate (
+  pubDateId INTEGER NOT NULL,
+  year INTEGER NOT NULL, 
+  month INTEGER NOT NULL,
+  PRIMARY KEY (pubDateId));
+```
+
+
+
+
+### Brianna's messing around
+```{r}
+path <- "C:/Users/brive/OneDrive/Desktop/DatabaseSystems/"
+xmlFile <- "pubmed_sample.xml"
+fpn <- paste0(path,xmlFile)
+xml_data <- xmlParse(file = fpn)
+nodes <- getNodeSet(xml_data, "//PubmedArticle") 
+r <- xmlRoot(xml_data)
+# Get the name of the node to confirm
+xmlName(r)
+
+numPubMeds <- xmlSize(r)
+
+```
+
+
+
+### These are starting pints fro the data frames. They do not include all information needed (I think). 
+
+Note: only need data relevant to the analysis questions. Add what you think is important and fill in more if needed later
+
+Creating a journal data frame. Uncertain how to do PubDate because they are completely different in different nodes. we do need pub date for the third section.
+
+Absolutely need pubdate for the analysis questions. Figure out how to add back in 
+```{r}
+
+newJournal.df <- data.frame(ISSN = character(),#cant be numeric with a hyphen?
+                          journalTitle = character(),
+                          ISOabbrevation = character(),
+                          volume = numeric(),
+                          Issue = numeric(),
+                          #pubYear = numeric(),
+                          #pubMonth = character(),
+                          stringsAsFactors = F)
+
+colnames(newJournal.df) <- c("ISSN","journalTitle", 
+                             "ISOabbrevation","Issue","volume")#,"pubYear","pubMonth")
+
+r <- xmlRoot(xml_data)
+
+for (m in 1:19)
+{
+
+  aJournalNode <- r[[m]][[1]][['Article']][['Journal']] #
+
+  aJournal <- aJournalNode[[m]]
+  ISSN <- xpathSApply(aJournalNode, "./ISSN", xmlValue)
+  journalTitle <- xpathSApply(aJournalNode, "./Title", xmlValue)
+  ISOabbrevation <- xpathSApply(aJournalNode, "./ISOAbbreviation", xmlValue)
+  volume<-xpathSApply(aJournalNode, "./JournalIssue/Volume", xmlValue)
+  Issue <-xpathSApply(aJournalNode, "./JournalIssue/Issue", xmlValue)
+  
+  #pubYear<-xpathSApply(aJournalNode, "./JournalIssue/PubDate/Year", xmlValue)
+  #pubMonth <-xpathSApply(aJournalNode, "./JournalIssue/PubDate/Month", xmlValue)
+    
+    
+  if (length(ISSN) == 0)
+    ISSN <- ""
+  if (length(journalTitle) == 0)
+    journalTitle <- ""
+  if (length(ISOabbrevation) == 0)
+    ISOabbrevation <- ""
+  #if (length(pubMonth) == 0)
+  #  pubMonth <- ""
+
+  newJournal.df[m,1] <- ISSN
+  newJournal.df[m,2] <- journalTitle
+  newJournal.df[m,3] <- ISOabbrevation
+  newJournal.df[m,4] <- volume
+  newJournal.df[m,5] <- Issue
+  #newJournal.df[m,6] <- pubYear
+  #newJournal.df[m,7] <- pubMonth
+}
+  
+```
+```{r}
+newJournal.df
+```
+
+
+
+
+Need to figure out if the commentated out lines are needed
+Decide if we want abstract for analysis (probably not). the other commented out lines do not seam useful.
+Can probably delete some of it 
+```{r}
+newArticle.df <- data.frame(PMID = numeric(), #
+                          journalISSN = character(),
+                          articleTitle = character(),
+                          pagination = character(),
+                          #elocationID can have more then 1. need another table for that?
+                          #same with abstract
+                          #and author list- different table? what to use as a key?
+                          language = character(),
+                          #grant list?
+                          #publication type tist?
+                          artYear = numeric(),
+                          artMonth = numeric(),
+                          artDay = numeric(),
+                          stringsAsFactors = F)
+
+colnames(newArticle.df) <- c("PMID","journalISSN", 
+                             "articleTitle","pagination","language", 
+                             "artYear", "artMonth", "artDay")#
+
+
+
+
+r <- xmlRoot(xml_data)
+
+for (m in 1:19)
+{
+  
+  anArticleNode <- r[[m]][[1]][['Article']]#[['Journal']] #
+
+  PMID <- xpathSApply(r[[m]][[1]], "./PMID", xmlValue)
+  journalISSN <- xpathSApply(anArticleNode, "./Journal/ISSN", xmlValue)
+  articleTitle <- xpathSApply(anArticleNode, "./ArticleTitle", xmlValue)
+  pagination <- xpathSApply(anArticleNode, "./Pagination/MedlinePgn", xmlValue)
+  language <- xpathSApply(anArticleNode, "./Language", xmlValue)
+  artYear <- xpathSApply(anArticleNode, "./ArticleDate/Year", xmlValue)
+  artMonth <- xpathSApply(anArticleNode, "./ArticleDate/Month", xmlValue)
+  artDay <- xpathSApply(anArticleNode, "./ArticleDate/Day", xmlValue)
+  
+  
+  if (length(PMID) == 0)
+    PMID <- ""
+  if (length(journalISSN) == 0)
+    journalISSN <- ""
+  if (length(articleTitle) == 0)
+    articleTitle <- ""
+  if (length(pagination) == 0)
+    pagination <- ""
+  if (length(language) == 0)
+    language <- ""
+  if (length(artYear) == 0)
+    artYear <- ""
+  if (length(artMonth) == 0)
+    artMonth <- ""
+  if (length(artDay) == 0)
+    artDay <- ""
+
+  newArticle.df[m,1] <- PMID
+  newArticle.df[m,2] <- journalISSN
+  newArticle.df[m,3] <- articleTitle
+  newArticle.df[m,4] <- pagination
+  newArticle.df[m,5] <- language
+  newArticle.df[m,6] <- artYear
+  newArticle.df[m,7] <- artMonth
+  newArticle.df[m,8] <- artDay
+    
+}
+
+```
+```{r}
+newArticle.df
+```
+I'm about 95% sure PMID can be used as a key
+
+for author, will need nested for loops? no primary key yet. can jus do a autoincriment when th information goes in a table 
+```{r}
+
+newAuthor.df <- data.frame(PMID = numeric(),
+                          lastName = character(),
+                          foreName = character(),
+                          initials = character(),
+                          affiliation = character(),
+                          stringsAsFactors = F)
+
+colnames(newJournal.df) <- c("PMID","lastName","foreName", 
+                             "initials","affiliation")
+
+r <- xmlRoot(xml_data)
+rowCount <- 1
+for (m in 1:19)
+{
+
+  PMID <- xpathSApply(r[[m]][[1]], "./PMID", xmlValue)
+  if (length(PMID) == 0)
+    PMID <- ""
+  
+  anAuthorNodeList <- r[[m]][[1]][['Article']][['AuthorList']] 
+  
+  j<-xmlSize(anAuthorNodeList)
+  
+  
+  for (k in 1:j){
+    
+    node <-anAuthorNodeList[[k]]
+    lastName <- xpathSApply(node, "./LastName", xmlValue)
+    foreName <- xpathSApply(node, "./ForeName", xmlValue)
+    initials <- xpathSApply(node, "./Initials", xmlValue)
+    affiliation <- xpathSApply(node, "./Affiliation", xmlValue)
+    
+    if (length(lastName) == 0)
+      lastName <- ""
+    if (length(foreName) == 0)
+      foreName <- ""
+    if (length(initials) == 0)
+      initials <- ""
+    if (length(affiliation) == 0)
+      affiliation <- ""
+    
+    newAuthor.df[rowCount,1] <- PMID
+    newAuthor.df[rowCount,2] <- lastName
+    newAuthor.df[rowCount,3] <- foreName
+    newAuthor.df[rowCount,4] <- initials
+    newAuthor.df[rowCount,5] <- affiliation
+    
+    
+    rowCount <- rowCount+1
+  }
+
+  
+
+  
+
+}
+  
+```
+```{r}
+newAuthor.df
+```
+
+
+still need history. I havent done it yet because I am uncertain what information should go there. The history node appears to just be a series of dates (published, accepted, electronically published, and a few more)
+how to get the information from the PubStatus line?
+
+
+
+might need to do the dates differently. they are needed in sectinon 3, but they arent all in the same format for every node
+
+
+
+
+
+
+
+### Part 1 Populate relational database with data from an XML document
+### Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP
+
+#change path for me
+```{r}
+path <- "C:/Users/brive/OneDrive/Desktop/DatabaseSystems/"
+xmlFile <- "pubmed_sample.xml"
+fpn <- paste0(path,xmlFile)
+xml_data <- xmlParse(file = fpn)
+nodes <- getNodeSet(xml_data, "//PubmedArticle") 
+r <- xmlRoot(xml_data)
+# Get the name of the node to confirm
+xmlName(r)
+#PubmedArticleSet
+#get number of children of root, number of pubMedArticles (19)
+numPubMeds <- xmlSize(r)
+#PUBdf <- data.frame()
+# lnodes <- xmlToList(xml_data)
+# lnodes
+```
+
+
+```{r}
+#will try prealloacing memory for xml nodes (class module example)
+#PubmedArticle child nodes-> MedlineCitation, PubmedData
+#MedlineCitation -> PMID, DateCreated, DateCompleted, DateRevised, Article, MedlineJournalnfo, OtherID, KeywordList
+#use xpath to set MedlineCitation's first child node = PMID
+pmid <- xpathSApply(xml_data,"//MedlineCitation/PMID", xmlValue)
+#pmid
+#MedlineCitation second child node = DateCreated -> Year, Month, Day
+yearCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Year/node()", xmlValue)
+#yearCreated
+monthCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Month", xmlValue)
+#monthCreated
+dayCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Day", xmlValue)
+#dayCreated
+```
+
+
+```{r}
+#dateCompleted -  MedlineCitation's second child node/tag
+yearCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Year", xmlValue)
+yearCompleted
+monthCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted//Month", xmlValue)
+monthCompleted
+dayCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Day", xmlValue)
+dayCompleted
+dateComp <- mapply(paste, yearCompleted, monthCompleted, dayCompleted, collapse = "")
+dateComp
+```
+
+
+
+```{r}
+dbDisconnect(dbs)
+```
+
+
+
+### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining
+
+
+
+
+
