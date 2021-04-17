@@ -17,6 +17,9 @@ dbs <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
 ```
 
 
+
+
+
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Language (
   idLanguage INTEGER NOT NULL,
@@ -134,7 +137,11 @@ newJournal.df
 
 Need to figure out if the commentated out lines are needed
 Decide if we want abstract for analysis (probably not). the other commented out lines do not seam useful.
-Can probably delete some of it 
+
+some nodes do not have publication date listed under Article. 
+
+figure out if the dates under created/completed/year are useful?
+
 ```{r}
 newArticle.df <- data.frame(PMID = numeric(), #
                           journalISSN = character(),
@@ -219,7 +226,7 @@ newAuthor.df <- data.frame(PMID = numeric(),
                           affiliation = character(),
                           stringsAsFactors = F)
 
-colnames(newJournal.df) <- c("PMID","lastName","foreName", 
+colnames(newAuthor.df) <- c("PMID","lastName","foreName", 
                              "initials","affiliation")
 
 r <- xmlRoot(xml_data)
@@ -282,8 +289,256 @@ how to get the information from the PubStatus line?
 
 might need to do the dates differently. they are needed in sectinon 3, but they arent all in the same format for every node
 
+```{r}
+r2<-r[[1]][['PubmedData']][['History']][[1]]
+
+#r2
+#j <- xpathSApply(r2, "./PubMedPubDate[@PubStatus]", xmlValue)
+j <- xmlGetAttr(r2,'PubStatus')
+j
+```
+
+history - will also need an auto incriminating primary key in the table 
+
+```{r}
+
+newHistory.df <- data.frame(PMID = numeric(),
+                          pubStatus = character(),
+                          year = numeric(),
+                          month = numeric(),
+                          day = numeric(),
+                          #hour and minute not useful for analysis?
+                          stringsAsFactors = F)
+
+colnames(newHistory.df) <- c("PMID","pubStatus","year", 
+                             "month","day")
+
+r <- xmlRoot(xml_data)
+rowCount <- 1
+for (m in 1:19)
+{
+
+  PMID <- xpathSApply(r[[m]][[1]], "./PMID", xmlValue)
+  if (length(PMID) == 0)
+    PMID <- ""
+  
+  aHistoryList <- r[[m]][['PubmedData']][['History']]
+  
+  j<-xmlSize(aHistoryList)
+  
+  
+  for (k in 1:j){
+    
+    node <-aHistoryList[[k]]
+    
+    pubStatus <- xmlGetAttr(node,'PubStatus')
+
+    year <- xpathSApply(node, "./Year", xmlValue)
+    month <- xpathSApply(node, "./Month", xmlValue)
+    day <- xpathSApply(node, "./Day", xmlValue)
+    
+
+    
+    if (length(pubStatus) == 0)
+      pubStatus <- ""
+    if (length(year) == 0)
+      year <- ""
+    if (length(month) == 0)
+      month <- ""
+    if (length(day) == 0)
+      day <- ""
+    
+    newHistory.df[rowCount,1] <- PMID
+    newHistory.df[rowCount,2] <- pubStatus
+    newHistory.df[rowCount,3] <- year
+    newHistory.df[rowCount,4] <- month
+    newHistory.df[rowCount,5] <- day
+    
+    
+    rowCount <- rowCount+1
+  }
+
+  
+
+  
+
+}
+  
+```
+```{r}
+newHistory.df
+```
+
+might need to spend some time converting char values to numbers
+
+#Brianna's ideas for table definitions
+I am not certain if we need any look up tables for the text answers. 
+
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Journal
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Article
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Author
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS History
+```
+
+not sure if issn can be a numeric if there is a dash. Also not 100% sure a varchar can be a primary key, even if it is unique (journal table.)
+
+uncertain if the foreign key goes here or in article. only in one of them. double check 
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Journal (
+  journalKey INTEGER primary key AUTOINCREMENT,
+  ISSN varchar(255) NOT NULL,
+  title varchar(255),
+  ISOabbrevation varchar(255),
+  issue int(255),
+  volume int(255)
+  );
+```
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Article (
+  articleKey INTEGER primary key AUTOINCREMENT,
+  PMID int(255) NOT NULL,
+  journalISSN varchar(255),
+  title varchar(255),
+  pagination varchar(255),
+  language varchar(255),
+  year int(255),
+  month int(255),
+  day int(255),
+
+  FOREIGN KEY (journalISSN ) REFERENCES Journal(ISSN)
+  );
+```
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS History (
+  histKey INTEGER primary key AUTOINCREMENT,
+  PMID int(255),
+  pubStatus varchar(255),
+  year int(255),
+  month int(255),
+  day int(255),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID)
+  );
+```
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Author (
+  authorKey INTEGER primary key AUTOINCREMENT,
+  PMID int(255),
+  lastName varchar(255),
+  foreName varchar(255),
+  initials varchar(255),
+  affiliation varchar(255),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID)
+  );
+```
 
 
+Inserting data into the tables. Will likely need to be adjusted 
+
+```{r}
+dbWriteTable(dbs, "journalData",newJournal.df )
+```
+```{sql connection=dbs}
+
+SELECT distinct * from journalData 
+```
+
+```{sql connection=dbs}
+INSERT INTO Journal (ISSN , title,ISOabbrevation,issue,volume)
+SELECT  ISSN, journalTitle, ISOabbrevation, Issue, volume
+FROM journalData
+
+
+```
+```{sql connection=dbs}
+
+SELECT * from Journal limit 10
+```
+```{sql connection=dbs}
+DROP TABLE journalData
+```
+
+
+```{r}
+dbWriteTable(dbs, "articleData",newArticle.df )
+```
+```{sql connection=dbs}
+
+SELECT  * from articleData
+```
+
+```{sql connection=dbs}
+INSERT INTO Article (PMID , journalISSN, title, pagination,language, year,month,day)
+SELECT  PMID, journalISSN, articleTitle, pagination,language, artYear,artMonth,artDay
+FROM articleData
+
+
+```
+```{sql connection=dbs}
+
+SELECT * from Article limit 10
+```
+```{sql connection=dbs}
+DROP TABLE articleData
+```
+
+
+
+```{r}
+dbWriteTable(dbs, "histData",newHistory.df )
+```
+```{sql connection=dbs}
+
+SELECT  * from histData
+```
+
+```{sql connection=dbs}
+INSERT INTO History (PMID , pubStatus, year, month,day)
+SELECT  PMID , pubStatus, year, month,day
+FROM histData
+
+
+```
+```{sql connection=dbs}
+
+SELECT * from History limit 10
+```
+```{sql connection=dbs}
+DROP TABLE histData
+```
+
+
+```{r}
+dbWriteTable(dbs, "authorData",newAuthor.df )
+```
+```{sql connection=dbs}
+
+SELECT  * from authorData
+```
+
+```{sql connection=dbs}
+INSERT INTO Author (PMID , lastName, foreName, initials,affiliation)
+SELECT  PMID , lastName, foreName, initials,affiliation
+FROM authorData
+
+
+```
+```{sql connection=dbs}
+
+SELECT * from Author limit 10
+```
+```{sql connection=dbs}
+DROP TABLE authorData
+```
 
 
 
