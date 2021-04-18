@@ -56,7 +56,10 @@ CREATE TABLE IF NOT EXISTS pubDate (
 ### Brianna's messing around
 ```{r}
 path <- "C:/Users/brive/OneDrive/Desktop/DatabaseSystems/"
-xmlFile <- "pubmed_sample.xml"
+xmlFile <- "pubmed_sampleV2.xml"
+
+#xmlFile <- "pubmed_sample.xml"
+
 fpn <- paste0(path,xmlFile)
 xml_data <- xmlParse(file = fpn)
 nodes <- getNodeSet(xml_data, "//PubmedArticle") 
@@ -156,11 +159,13 @@ newArticle.df <- data.frame(PMID = numeric(), #
                           artYear = numeric(),
                           artMonth = numeric(),
                           artDay = numeric(),
+                          pubYear = numeric(),
+                          pubMonth = character(),
                           stringsAsFactors = F)
 
 colnames(newArticle.df) <- c("PMID","journalISSN", 
                              "articleTitle","pagination","language", 
-                             "artYear", "artMonth", "artDay")#
+                             "artYear", "artMonth", "artDay", 'pubYear', "pubMonth")#
 
 
 
@@ -177,9 +182,13 @@ for (m in 1:19)
   articleTitle <- xpathSApply(anArticleNode, "./ArticleTitle", xmlValue)
   pagination <- xpathSApply(anArticleNode, "./Pagination/MedlinePgn", xmlValue)
   language <- xpathSApply(anArticleNode, "./Language", xmlValue)
+  
   artYear <- xpathSApply(anArticleNode, "./ArticleDate/Year", xmlValue)
   artMonth <- xpathSApply(anArticleNode, "./ArticleDate/Month", xmlValue)
   artDay <- xpathSApply(anArticleNode, "./ArticleDate/Day", xmlValue)
+  
+  pubYear <- xpathSApply(anArticleNode, "./Journal/JournalIssue/PubDate/Year", xmlValue)
+  pubMonth <- xpathSApply(anArticleNode, "./Journal/JournalIssue/PubDate/Month", xmlValue)
   
   
   if (length(PMID) == 0)
@@ -198,6 +207,11 @@ for (m in 1:19)
     artMonth <- ""
   if (length(artDay) == 0)
     artDay <- ""
+  
+  if (length(pubYear) == 0)
+    pubYear <- ""
+  if (length(pubMonth) == 0)
+    pubMonth <- ""
 
   newArticle.df[m,1] <- PMID
   newArticle.df[m,2] <- journalISSN
@@ -207,7 +221,8 @@ for (m in 1:19)
   newArticle.df[m,6] <- artYear
   newArticle.df[m,7] <- artMonth
   newArticle.df[m,8] <- artDay
-    
+  newArticle.df[m,9] <- pubYear
+  newArticle.df[m,10] <- pubMonth
 }
 
 ```
@@ -217,6 +232,13 @@ newArticle.df
 I'm about 95% sure PMID can be used as a key
 
 for author, will need nested for loops? no primary key yet. can jus do a autoincriment when th information goes in a table 
+
+
+make sure to only use year and month because 
+set deafults to 0 
+
+joe used pubDate under journal instead 
+
 ```{r}
 
 newAuthor.df <- data.frame(PMID = numeric(),
@@ -369,6 +391,9 @@ for (m in 1:19)
 newHistory.df
 ```
 
+maybe the only dates we should use are teh publish dates in history? thay are at least all complete. 
+
+
 might need to spend some time converting char values to numbers
 
 #Brianna's ideas for table definitions
@@ -401,9 +426,10 @@ CREATE TABLE IF NOT EXISTS Journal (
   );
 ```
 
+articleKey INTEGER primary key AUTOINCREMENT,
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Article (
-  articleKey INTEGER primary key AUTOINCREMENT,
+  
   PMID int(255) NOT NULL,
   journalISSN varchar(255),
   title varchar(255),
@@ -429,6 +455,7 @@ CREATE TABLE IF NOT EXISTS History (
   );
 ```
 
+
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Author (
   authorKey INTEGER primary key AUTOINCREMENT,
@@ -449,7 +476,7 @@ dbWriteTable(dbs, "journalData",newJournal.df )
 ```
 ```{sql connection=dbs}
 
-SELECT distinct * from journalData 
+SELECT distinct ISSN from journalData 
 ```
 
 ```{sql connection=dbs}
@@ -461,7 +488,7 @@ FROM journalData
 ```
 ```{sql connection=dbs}
 
-SELECT * from Journal limit 10
+SELECT distinct ISSN,issue, volume from Journal 
 ```
 ```{sql connection=dbs}
 DROP TABLE journalData
@@ -473,7 +500,7 @@ dbWriteTable(dbs, "articleData",newArticle.df )
 ```
 ```{sql connection=dbs}
 
-SELECT  * from articleData
+SELECT distinct PMID from articleData
 ```
 
 ```{sql connection=dbs}
@@ -498,8 +525,12 @@ dbWriteTable(dbs, "histData",newHistory.df )
 ```
 ```{sql connection=dbs}
 
-SELECT  * from histData
+SELECT  distinct * from histData  where pubStatus = "pubmed" 
 ```
+could possibly only use these dates in the project. treat the pubmed date at the publish date for the later questions, as it is actually a complete date in numeric form.
+
+
+
 
 ```{sql connection=dbs}
 INSERT INTO History (PMID , pubStatus, year, month,day)
