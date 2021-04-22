@@ -3,6 +3,15 @@ title: "P2"
 output: html_document
 ---
 
+
+
+Notes for the grader:
+-the date in the history table where the PubStatus is 'pubmed' is assumed to be the publication data for this practicum because it is included in every node, is in integer form and is complete. This was verified as acceptable with the professor.
+
+
+
+
+
 ### Part 1 Load XML: Create a normalized relational OLTP database
 ```{r}
 #pacman (package manager) installs and loads packages if not installed
@@ -16,44 +25,6 @@ dbfile = "pubMed.db"
 dbs <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
 ```
 
-
-
-delete these?
-
-```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS Language (
-  idLanguage INTEGER NOT NULL,
-  Language TEXT NOT NULL,
-  PRIMARY KEY (idLanguage));
-```
-
-
-```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS Pagination (
-  paginationId INTEGER NOT NULL,
-  MedlinePgn TEXT NOT NULL,
-  PRIMARY KEY (paginationId));
-```
-
-```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS History (
-  historyId INTEGER NOT NULL,
-  PRIMARY KEY (historyId));
-```
-
-
-```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS pubDate (
-  pubDateId INTEGER NOT NULL,
-  year INTEGER NOT NULL, 
-  month INTEGER NOT NULL,
-  PRIMARY KEY (pubDateId));
-```
-
-
-
-
-### Brianna's messing around
 ```{r}
 path <- "C:/Users/brive/OneDrive/Desktop/DatabaseSystems/"
 xmlFile <- "pubmed_sampleV2.xml"
@@ -71,15 +42,14 @@ numPubMeds <- xmlSize(r)
 
 ```
 
+## Part 1 Question 2
 
+need to insert ER diagram !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 
-### These are starting pints fro the data frames. They do not include all information needed (I think). 
+## Part 1 Question 2 and Question 3 (combined, not seperated by question)
 
-Note: only need data relevant to the analysis questions. Add what you think is important and fill in more if needed later
-
-Creating a journal data frame. Uncertain how to do PubDate because they are completely different in different nodes. we do need pub date for the third section.
-
-Absolutely need pubdate for the analysis questions. Figure out how to add back in 
+data is collected from the XML here
 ```{r}
 
 newJournal.df <- data.frame(ISSN = character(),#cant be numeric with a hyphen?
@@ -132,18 +102,10 @@ for (m in 1:19)
   
 ```
 ```{r}
-newJournal.df
+#commented out so not seen in a knitted file
+#newJournal.df
 ```
 
-
-
-
-Need to figure out if the commentated out lines are needed
-Decide if we want abstract for analysis (probably not). the other commented out lines do not seam useful.
-
-some nodes do not have publication date listed under Article. 
-
-figure out if the dates under created/completed/year are useful?
 
 ```{r}
 newArticle.df <- data.frame(PMID = numeric(), #
@@ -166,9 +128,6 @@ newArticle.df <- data.frame(PMID = numeric(), #
 colnames(newArticle.df) <- c("PMID","journalISSN", 
                              "articleTitle","pagination","language", 
                              "artYear", "artMonth", "artDay", 'pubYear', "pubMonth")#
-
-
-
 
 r <- xmlRoot(xml_data)
 
@@ -227,17 +186,9 @@ for (m in 1:19)
 
 ```
 ```{r}
-newArticle.df
+#commented out so not seen in a knitted file
+#newArticle.df
 ```
-I'm about 95% sure PMID can be used as a key
-
-for author, will need nested for loops? no primary key yet. can jus do a autoincriment when th information goes in a table 
-
-
-make sure to only use year and month because 
-set deafults to 0 
-
-joe used pubDate under journal instead 
 
 ```{r}
 
@@ -292,35 +243,14 @@ for (m in 1:19)
     rowCount <- rowCount+1
   }
 
-  
-
-  
-
 }
   
 ```
 ```{r}
-newAuthor.df
+#commented out so not seen in a knitted file
+#newAuthor.df
 ```
 
-
-still need history. I havent done it yet because I am uncertain what information should go there. The history node appears to just be a series of dates (published, accepted, electronically published, and a few more)
-how to get the information from the PubStatus line?
-
-
-
-might need to do the dates differently. they are needed in sectinon 3, but they arent all in the same format for every node
-
-```{r}
-r2<-r[[1]][['PubmedData']][['History']][[1]]
-
-#r2
-#j <- xpathSApply(r2, "./PubMedPubDate[@PubStatus]", xmlValue)
-j <- xmlGetAttr(r2,'PubStatus')
-j
-```
-
-history - will also need an auto incriminating primary key in the table 
 
 ```{r}
 
@@ -360,7 +290,6 @@ for (m in 1:19)
     day <- xpathSApply(node, "./Day", xmlValue)
     
 
-    
     if (length(pubStatus) == 0)
       pubStatus <- ""
     if (length(year) == 0)
@@ -380,30 +309,26 @@ for (m in 1:19)
     rowCount <- rowCount+1
   }
 
-  
-
-  
-
 }
   
 ```
 ```{r}
-newHistory.df
+#commented out so not seen in a knitted file
+#newHistory.df
 ```
 
-maybe the only dates we should use are teh publish dates in history? thay are at least all complete. 
 
 
-might need to spend some time converting char values to numbers
-
-#Brianna's ideas for table definitions
-I am not certain if we need any look up tables for the text answers. 
+Tables are created here
 
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Journal
 ```
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Article
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Authorship
 ```
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Author
@@ -425,6 +350,10 @@ CREATE TABLE IF NOT EXISTS Journal (
 ```
 
 articleKey INTEGER primary key AUTOINCREMENT,
+
+  year int(255),
+  month int(255),
+  day int(255),
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Article (
   
@@ -433,36 +362,53 @@ CREATE TABLE IF NOT EXISTS Article (
   title varchar(255),
   pagination varchar(255),
   language varchar(255),
-  year int(255),
-  month int(255),
-  day int(255),
+
 
   FOREIGN KEY (journalISSN ) REFERENCES Journal(ISSN)
   );
 ```
 
+  histKey INTEGER primary key AUTOINCREMENT,
+  
+  use compound key instead?
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS History (
-  histKey INTEGER primary key AUTOINCREMENT,
+
   PMID int(255),
   pubStatus varchar(255),
   year int(255),
   month int(255),
   day int(255),
+  PRIMARY  KEY (PMID, pubStatus),
   FOREIGN KEY (PMID) REFERENCES Article(PMID)
   );
 ```
 
-
+adding in this lookup table
+might need compound primary key?
 ```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS Author (
-  authorKey INTEGER primary key AUTOINCREMENT,
+CREATE TABLE IF NOT EXISTS Authorship (
+  lookupKey INTEGER primary key AUTOINCREMENT,
   PMID int(255),
   lastName varchar(255),
   foreName varchar(255),
-  initials varchar(255),
-  affiliation varchar(255),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID),
+  FOREIGN KEY (lastName, foreName) REFERENCES Author(lastName, foreName)
+  );
+```
+
+  PMID int(255),
+  
+  ,
   FOREIGN KEY (PMID) REFERENCES Article(PMID)
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Author (
+  authorKey INTEGER primary key AUTOINCREMENT,
+
+  lastName varchar(255),
+  foreName varchar(255),
+  initials varchar(255),
+  affiliation varchar(255)
   );
 ```
 
@@ -487,7 +433,7 @@ FROM journalData
 ```
 ```{sql connection=dbs}
 
-SELECT * from Journal 
+SELECT ISOabbrevation from Journal limit 5
 ```
 ```{sql connection=dbs}
 DROP TABLE journalData
@@ -502,16 +448,20 @@ dbWriteTable(dbs, "articleData",newArticle.df )
 SELECT distinct PMID from articleData
 ```
 
+
+Remove year/ month/day?
+, year,month,day
+, artYear,artMonth,artDay
 ```{sql connection=dbs}
-INSERT INTO Article (PMID , journalISSN, title, pagination,language, year,month,day)
-SELECT  PMID, journalISSN, articleTitle, pagination,language, artYear,artMonth,artDay
+INSERT INTO Article (PMID , journalISSN, title, pagination,language)
+SELECT  PMID, journalISSN, articleTitle, pagination,language
 FROM articleData
 
 
 ```
 ```{sql connection=dbs}
 
-SELECT * from Article limit 10
+SELECT * from Article limit 5
 ```
 ```{sql connection=dbs}
 DROP TABLE articleData
@@ -526,10 +476,6 @@ dbWriteTable(dbs, "histData",newHistory.df )
 
 SELECT  distinct * from histData  where pubStatus = "pubmed" 
 ```
-could possibly only use these dates in the project. treat the pubmed date at the publish date for the later questions, as it is actually a complete date in numeric form.
-
-
-
 
 ```{sql connection=dbs}
 INSERT INTO History (PMID , pubStatus, year, month,day)
@@ -540,7 +486,7 @@ FROM histData
 ```
 ```{sql connection=dbs}
 
-SELECT * from History limit 10
+SELECT * from History limit 5
 ```
 ```{sql connection=dbs}
 DROP TABLE histData
@@ -555,86 +501,150 @@ dbWriteTable(dbs, "authorData",newAuthor.df )
 SELECT  * from authorData
 ```
 
+PMID ,
+PMID ,
 ```{sql connection=dbs}
-INSERT INTO Author (PMID , lastName, foreName, initials,affiliation)
-SELECT  PMID , lastName, foreName, initials,affiliation
+INSERT INTO Author ( lastName, foreName, initials,affiliation)
+SELECT   lastName, foreName, initials,affiliation
 FROM authorData
 
 
 ```
 ```{sql connection=dbs}
 
-SELECT * from Author limit 10
+SELECT distinct * from Author limit 5
 ```
+
+Initials is not included in the keys for Authorship because it dosent impact the results. 84 unique first and last name pairs, and 84 first, last and initial pairs.
+```{sql connection=dbs}
+INSERT INTO Authorship ( PMID, lastName, foreName)
+SELECT   PMID, lastName, foreName
+FROM authorData
+
+
+```
+```{sql connection=dbs}
+
+SELECT * from Authorship limit 5
+```
+
+
 ```{sql connection=dbs}
 DROP TABLE authorData
 ```
 
 
 
+### Part 2
 
-### Part 1 Populate relational database with data from an XML document
-### Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP
 
-#change path for me
-```{r}
-path <- "C:/Users/brive/OneDrive/Desktop/DatabaseSystems/"
-xmlFile <- "pubmed_sample.xml"
-fpn <- paste0(path,xmlFile)
-xml_data <- xmlParse(file = fpn)
-nodes <- getNodeSet(xml_data, "//PubmedArticle") 
-r <- xmlRoot(xml_data)
-# Get the name of the node to confirm
-xmlName(r)
-#PubmedArticleSet
-#get number of children of root, number of pubMedArticles (19)
-numPubMeds <- xmlSize(r)
-#PUBdf <- data.frame()
-# lnodes <- xmlToList(xml_data)
-# lnodes
+
+## Part 2 Question 1
+need image of ERD
+
+need to create the tables and populate the information.
+syntax for this does not match the example because it was not for SQLite. just making tables with connections.
+
+```{sql connection=dbs}
+DROP TABLE IF EXISTS articleFact
+```
+
+refrence keys are all PMID or ISSN? is this allowed?
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS articleFact (
+  PMID int(255) primary key,
+  authorRefrence int(255),
+  journalRefrence varchar(255),
+  dateRefrence int(255),
+  FOREIGN KEY (authorRefrence) REFERENCES authorDimenion(authorRefrence),
+  FOREIGN KEY (journalRefrence) REFERENCES journalDimenion(dateRefrence),
+  FOREIGN KEY (dateRefrence) REFERENCES authorDimenion(dateRefrence)
+  );
+```
+
+quarter will just be 1-4
+```{sql connection=dbs}
+DROP TABLE IF EXISTS dateDimension
+```
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS dateDimension(
+  dateRefrence int(255) primary key,
+  year int(255),
+  month int(255),
+  day int(255),
+  quarter int(255)
+
+  );
+```
+
+```{sql connection=dbs}
+DROP TABLE IF EXISTS authorDimension
+```
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS authorDimension(
+  authorRefrence int(255) primary key,
+  lastName varchar(255),
+  foreName varchar(255)
+
+  );
+```
+
+```{sql connection=dbs}
+DROP TABLE IF EXISTS journalDimension
+```
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS journalDimension(
+  journalRefrence varchar(255) primary key
+  );
 ```
 
 
-```{r}
-#will try prealloacing memory for xml nodes (class module example)
-#PubmedArticle child nodes-> MedlineCitation, PubmedData
-#MedlineCitation -> PMID, DateCreated, DateCompleted, DateRevised, Article, MedlineJournalnfo, OtherID, KeywordList
-#use xpath to set MedlineCitation's first child node = PMID
-pmid <- xpathSApply(xml_data,"//MedlineCitation/PMID", xmlValue)
-#pmid
-#MedlineCitation second child node = DateCreated -> Year, Month, Day
-yearCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Year/node()", xmlValue)
-#yearCreated
-monthCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Month", xmlValue)
-#monthCreated
-dayCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Day", xmlValue)
-#dayCreated
-```
+
+not yet populated, should be fairly simple
+
+## Part 2 Question 2
+
+Note: to populate star schema, do computations in R and then insert that data into the tables.
+insert, not dbwritetable. so make the tables and say insert where key == something? all based on article key? still kinda fuzzy on this. 
+compute all facts in the data frames before uploading the data into any tables? easier to keep track of? maybe adjust the R dataframes down here, and populate the star schema from the frames with the new numerical answer
 
 
-```{r}
-#dateCompleted -  MedlineCitation's second child node/tag
-yearCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Year", xmlValue)
-yearCompleted
-monthCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted//Month", xmlValue)
-monthCompleted
-dayCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Day", xmlValue)
-dayCompleted
-dateComp <- mapply(paste, yearCompleted, monthCompleted, dayCompleted, collapse = "")
-dateComp
-```
+need image of ERD 
+
+within the schema from above, which I think means a striped down version? either that or it means that any information included needs to be included in the above schema, but doesnt need all of it? 
+or updated to include this fact table too? not very clear. 
+### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining
+
+note: facts always result in a number? a fact is a recomputed aggregate number
+
+
+## Part 3 Question 1
+queries (plural) that explore publication seasonal pattern. need to be numerical results, and neesds to be more then just number of publications per season. need additional conditions maybe?
+
+
+## Part 3 Question 2
+Visualize the data from the previous step. More then one visualization maybe? unclear.
+use ggplot
+be sure to explain the findings.
+
+
+
+do not do a predictive model. Could probably manage it but its harder and not worth any extra points. 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 ```{r}
 dbDisconnect(dbs)
 ```
-
-
-
-### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining
-
-
-
-
-
