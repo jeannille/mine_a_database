@@ -18,7 +18,7 @@ dbs <- dbConnect(RSQLite::SQLite(), paste0(fpath,dbfile))
 
 
 
-
+delete these?
 
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Language (
@@ -417,12 +417,10 @@ not sure if issn can be a numeric if there is a dash. Also not 100% sure a varch
 uncertain if the foreign key goes here or in article. only in one of them. double check 
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Journal (
-  journalKey INTEGER primary key AUTOINCREMENT,
-  ISSN varchar(255) NOT NULL,
+  ISSN varchar(255) primary key,
   title varchar(255),
-  ISOabbrevation varchar(255),
-  issue int(255),
-  volume int(255)
+  ISOabbrevation varchar(255)
+
   );
 ```
 
@@ -476,19 +474,20 @@ dbWriteTable(dbs, "journalData",newJournal.df )
 ```
 ```{sql connection=dbs}
 
-SELECT distinct ISSN from journalData 
+SELECT distinct 
+ISSN,journalTitle,ISOabbrevation from journalData 
 ```
 
 ```{sql connection=dbs}
-INSERT INTO Journal (ISSN , title,ISOabbrevation,issue,volume)
-SELECT  ISSN, journalTitle, ISOabbrevation, Issue, volume
+INSERT INTO Journal (ISSN , title,ISOabbrevation)
+SELECT  distinct ISSN, journalTitle, ISOabbrevation
 FROM journalData
 
 
 ```
 ```{sql connection=dbs}
 
-SELECT distinct ISSN,issue, volume from Journal 
+SELECT * from Journal 
 ```
 ```{sql connection=dbs}
 DROP TABLE journalData
