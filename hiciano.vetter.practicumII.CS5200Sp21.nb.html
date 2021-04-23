@@ -253,54 +253,6 @@ dbs &lt;- dbConnect(RSQLite::SQLite(), &quot;pubMed.db&quot;)
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIExhbmd1YWdlIChcbiAgaWRMYW5ndWFnZSBJTlRFR0VSIE5PVCBOVUxMLFxuICBMYW5ndWFnZSBURVhUIE5PVCBOVUxMLFxuICBQUklNQVJZIEtFWSAoaWRMYW5ndWFnZSkpO1xuXG5gYGAifQ== -->
-<pre class="sql"><code>
-CREATE TABLE IF NOT EXISTS Language (
-  idLanguage INTEGER NOT NULL,
-  Language TEXT NOT NULL,
-  PRIMARY KEY (idLanguage));
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIFBhZ2luYXRpb24gKFxuICBwYWdpbmF0aW9uSWQgSU5URUdFUiBOT1QgTlVMTCxcbiAgTWVkbGluZVBnbiBURVhUIE5PVCBOVUxMLFxuICBQUklNQVJZIEtFWSAocGFnaW5hdGlvbklkKSk7XG5cbmBgYCJ9 -->
-<pre class="sql"><code>
-CREATE TABLE IF NOT EXISTS Pagination (
-  paginationId INTEGER NOT NULL,
-  MedlinePgn TEXT NOT NULL,
-  PRIMARY KEY (paginationId));
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIEhpc3RvcnkgKFxuICBoaXN0b3J5SWQgSU5URUdFUiBOT1QgTlVMTCxcbiAgUFJJTUFSWSBLRVkgKGhpc3RvcnlJZCkpO1xuXG5gYGAifQ== -->
-<pre class="sql"><code>
-CREATE TABLE IF NOT EXISTS History (
-  historyId INTEGER NOT NULL,
-  PRIMARY KEY (historyId));
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIHB1YkRhdGUgKFxuICBwdWJEYXRlSWQgSU5URUdFUiBOT1QgTlVMTCxcbiAgeWVhciBJTlRFR0VSIE5PVCBOVUxMLCBcbiAgbW9udGggSU5URUdFUiBOT1QgTlVMTCxcbiAgUFJJTUFSWSBLRVkgKHB1YkRhdGVJZCkpO1xuXG5gYGAifQ== -->
-<pre class="sql"><code>
-CREATE TABLE IF NOT EXISTS pubDate (
-  pubDateId INTEGER NOT NULL,
-  year INTEGER NOT NULL, 
-  month INTEGER NOT NULL,
-  PRIMARY KEY (pubDateId));
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
 </div>
 <div id="part-1-populate-relational-database-with-data-from-an-xml-document" class="section level3">
 <h3>Part 1 Populate relational database with data from an XML document</h3>
@@ -309,53 +261,850 @@ CREATE TABLE IF NOT EXISTS pubDate (
 <h3>Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubnVtUHViTWVkc1xuXG5gYGAifQ== -->
-<pre class="r"><code>numPubMeds
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDE5XG4ifQ== -->
-<pre><code>[1] 19</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG4jd2lsbCB0cnkgcHJlYWxsb2FjaW5nIG1lbW9yeSBmb3IgeG1sIG5vZGVzIChjbGFzcyBtb2R1bGUgZXhhbXBsZSlcblxuXG4jUHVibWVkQXJ0aWNsZSBjaGlsZCBub2Rlcy0+IE1lZGxpbmVDaXRhdGlvbiwgUHVibWVkRGF0YVxuI01lZGxpbmVDaXRhdGlvbiAtPiBQTUlELCBEYXRlQ3JlYXRlZCwgRGF0ZUNvbXBsZXRlZCwgRGF0ZVJldmlzZWQsIEFydGljbGUsIE1lZGxpbmVKb3VybmFsbmZvLCBPdGhlcklELCBLZXl3b3JkTGlzdFxuXG4jdXNlIHhwYXRoIHRvIHNldCBNZWRsaW5lQ2l0YXRpb24ncyBmaXJzdCBjaGlsZCBub2RlID0gUE1JRFxucG1pZCA8LSB4cGF0aFNBcHBseSh4bWxfZGF0YSxcIi8vTWVkbGluZUNpdGF0aW9uL1BNSURcIiwgeG1sVmFsdWUpXG5wbWlkXG5cbiNNZWRsaW5lQ2l0YXRpb24gc2Vjb25kIGNoaWxkIG5vZGUgPSBEYXRlQ3JlYXRlZCAtPiBZZWFyLCBNb250aCwgRGF5XG55ZWFyQ3JlYXRlZCA8LSBsYXBwbHkobm9kZXMsIHhwYXRoU0FwcGx5LCBcIi4vL01lZGxpbmVDaXRhdGlvbi9EYXRlQ3JlYXRlZC9ZZWFyL25vZGUoKVwiLCB4bWxWYWx1ZSlcbnllYXJDcmVhdGVkXG5cbm1vbnRoQ3JlYXRlZCA8LSBsYXBwbHkobm9kZXMsIHhwYXRoU0FwcGx5LCBcIi4vL01lZGxpbmVDaXRhdGlvbi9EYXRlQ3JlYXRlZC9Nb250aFwiLCB4bWxWYWx1ZSlcbm1vbnRoQ3JlYXRlZFxuXG5kYXlDcmVhdGVkIDwtIGxhcHBseShub2RlcywgeHBhdGhTQXBwbHksIFwiLi8vTWVkbGluZUNpdGF0aW9uL0RhdGVDcmVhdGVkL0RheVwiLCB4bWxWYWx1ZSlcbmRheUNyZWF0ZWRcblxuXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5wYXRoIDwtIFwiL1VzZXJzL2plYW5uaWxsZS9yZXBvcy9taW5lX2FfZGF0YWJhc2UvXCJcbnhtbEZpbGUgPC0gXCJwdWJtZWRfc2FtcGxlLnhtbFwiXG5mcG4gPC0gcGFzdGUwKHBhdGgseG1sRmlsZSlcblxueG1sX2RhdGEgPC0geG1sUGFyc2UoZmlsZSA9IGZwbilcbm5vZGVzIDwtIGdldE5vZGVTZXQoeG1sX2RhdGEsIFwiLy9QdWJtZWRBcnRpY2xlXCIpIFxuciA8LSB4bWxSb290KHhtbF9kYXRhKVxuXG4jIEdldCB0aGUgbmFtZSBvZiB0aGUgbm9kZSB0byBjb25maXJtXG54bWxOYW1lKHIpXG5gYGAifQ== -->
 <pre class="r"><code>
-#will try prealloacing memory for xml nodes (class module example)
+path &lt;- &quot;/Users/jeannille/repos/mine_a_database/&quot;
+xmlFile &lt;- &quot;pubmed_sample.xml&quot;
+fpn &lt;- paste0(path,xmlFile)
 
+xml_data &lt;- xmlParse(file = fpn)
+nodes &lt;- getNodeSet(xml_data, &quot;//PubmedArticle&quot;) 
+r &lt;- xmlRoot(xml_data)
 
-#PubmedArticle child nodes-&gt; MedlineCitation, PubmedData
-#MedlineCitation -&gt; PMID, DateCreated, DateCompleted, DateRevised, Article, MedlineJournalnfo, OtherID, KeywordList
+# Get the name of the node to confirm
+xmlName(r)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiUHVibWVkQXJ0aWNsZVNldFwiXG4ifQ== -->
+<pre><code>[1] &quot;PubmedArticleSet&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1B1Ym1lZEFydGljbGVTZXRcblxuI2dldCBudW1iZXIgb2YgY2hpbGRyZW4gb2Ygcm9vdCwgbnVtYmVyIG9mIHB1Yk1lZEFydGljbGVzICgxOSlcbm51bVB1Yk1lZHMgPC0geG1sU2l6ZShyKVxuXG5cbmBgYCJ9 -->
+<pre class="r"><code>#PubmedArticleSet
 
-#use xpath to set MedlineCitation&#39;s first child node = PMID
-pmid &lt;- xpathSApply(xml_data,&quot;//MedlineCitation/PMID&quot;, xmlValue)
-pmid
-
-#MedlineCitation second child node = DateCreated -&gt; Year, Month, Day
-yearCreated &lt;- lapply(nodes, xpathSApply, &quot;.//MedlineCitation/DateCreated/Year/node()&quot;, xmlValue)
-yearCreated
-
-monthCreated &lt;- lapply(nodes, xpathSApply, &quot;.//MedlineCitation/DateCreated/Month&quot;, xmlValue)
-monthCreated
-
-dayCreated &lt;- lapply(nodes, xpathSApply, &quot;.//MedlineCitation/DateCreated/Day&quot;, xmlValue)
-dayCreated
+#get number of children of root, number of pubMedArticles (19)
+numPubMeds &lt;- xmlSize(r)
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0ZUNvbXBcblxuYGBgIn0= -->
-<pre class="r"><code>dateComp
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5uZXdKb3VybmFsLmRmIDwtIGRhdGEuZnJhbWUoSVNTTiA9IGNoYXJhY3RlcigpLCNjYW50IGJlIG51bWVyaWMgd2l0aCBhIGh5cGhlbj9cbiAgICAgICAgICAgICAgICAgICAgICAgICAgam91cm5hbFRpdGxlID0gY2hhcmFjdGVyKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIElTT2FiYnJldmF0aW9uID0gY2hhcmFjdGVyKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHZvbHVtZSA9IG51bWVyaWMoKSxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgSXNzdWUgPSBudW1lcmljKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgICNwdWJZZWFyID0gbnVtZXJpYygpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICAjcHViTW9udGggPSBjaGFyYWN0ZXIoKSxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEYpXG5cbmNvbG5hbWVzKG5ld0pvdXJuYWwuZGYpIDwtIGMoXCJJU1NOXCIsXCJqb3VybmFsVGl0bGVcIiwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwiSVNPYWJicmV2YXRpb25cIixcIklzc3VlXCIsXCJ2b2x1bWVcIikjLFwicHViWWVhclwiLFwicHViTW9udGhcIilcblxuciA8LSB4bWxSb290KHhtbF9kYXRhKVxuXG5mb3IgKG0gaW4gMToxOSlcbntcblxuICBhSm91cm5hbE5vZGUgPC0gcltbbV1dW1sxXV1bWydBcnRpY2xlJ11dW1snSm91cm5hbCddXSAjXG5cbiAgYUpvdXJuYWwgPC0gYUpvdXJuYWxOb2RlW1ttXV1cbiAgSVNTTiA8LSB4cGF0aFNBcHBseShhSm91cm5hbE5vZGUsIFwiLi9JU1NOXCIsIHhtbFZhbHVlKVxuICBqb3VybmFsVGl0bGUgPC0geHBhdGhTQXBwbHkoYUpvdXJuYWxOb2RlLCBcIi4vVGl0bGVcIiwgeG1sVmFsdWUpXG4gIElTT2FiYnJldmF0aW9uIDwtIHhwYXRoU0FwcGx5KGFKb3VybmFsTm9kZSwgXCIuL0lTT0FiYnJldmlhdGlvblwiLCB4bWxWYWx1ZSlcbiAgdm9sdW1lPC14cGF0aFNBcHBseShhSm91cm5hbE5vZGUsIFwiLi9Kb3VybmFsSXNzdWUvVm9sdW1lXCIsIHhtbFZhbHVlKVxuICBJc3N1ZSA8LXhwYXRoU0FwcGx5KGFKb3VybmFsTm9kZSwgXCIuL0pvdXJuYWxJc3N1ZS9Jc3N1ZVwiLCB4bWxWYWx1ZSlcbiAgXG4gICNwdWJZZWFyPC14cGF0aFNBcHBseShhSm91cm5hbE5vZGUsIFwiLi9Kb3VybmFsSXNzdWUvUHViRGF0ZS9ZZWFyXCIsIHhtbFZhbHVlKVxuICAjcHViTW9udGggPC14cGF0aFNBcHBseShhSm91cm5hbE5vZGUsIFwiLi9Kb3VybmFsSXNzdWUvUHViRGF0ZS9Nb250aFwiLCB4bWxWYWx1ZSlcbiAgICBcbiAgICBcbiAgaWYgKGxlbmd0aChJU1NOKSA9PSAwKVxuICAgIElTU04gPC0gXCJcIlxuICBpZiAobGVuZ3RoKGpvdXJuYWxUaXRsZSkgPT0gMClcbiAgICBqb3VybmFsVGl0bGUgPC0gXCJcIlxuICBpZiAobGVuZ3RoKElTT2FiYnJldmF0aW9uKSA9PSAwKVxuICAgIElTT2FiYnJldmF0aW9uIDwtIFwiXCJcbiAgI2lmIChsZW5ndGgocHViTW9udGgpID09IDApXG4gICMgIHB1Yk1vbnRoIDwtIFwiXCJcblxuICBuZXdKb3VybmFsLmRmW20sMV0gPC0gSVNTTlxuICBuZXdKb3VybmFsLmRmW20sMl0gPC0gam91cm5hbFRpdGxlXG4gIG5ld0pvdXJuYWwuZGZbbSwzXSA8LSBJU09hYmJyZXZhdGlvblxuICBuZXdKb3VybmFsLmRmW20sNF0gPC0gdm9sdW1lXG4gIG5ld0pvdXJuYWwuZGZbbSw1XSA8LSBJc3N1ZVxuICAjbmV3Sm91cm5hbC5kZlttLDZdIDwtIHB1YlllYXJcbiAgI25ld0pvdXJuYWwuZGZbbSw3XSA8LSBwdWJNb250aFxufVxuICBcbmBgYCJ9 -->
+<pre class="r"><code>
+newJournal.df &lt;- data.frame(ISSN = character(),#cant be numeric with a hyphen?
+                          journalTitle = character(),
+                          ISOabbrevation = character(),
+                          volume = numeric(),
+                          Issue = numeric(),
+                          #pubYear = numeric(),
+                          #pubMonth = character(),
+                          stringsAsFactors = F)
+
+colnames(newJournal.df) &lt;- c(&quot;ISSN&quot;,&quot;journalTitle&quot;, 
+                             &quot;ISOabbrevation&quot;,&quot;Issue&quot;,&quot;volume&quot;)#,&quot;pubYear&quot;,&quot;pubMonth&quot;)
+
+r &lt;- xmlRoot(xml_data)
+
+for (m in 1:19)
+{
+
+  aJournalNode &lt;- r[[m]][[1]][[&#39;Article&#39;]][[&#39;Journal&#39;]] #
+
+  aJournal &lt;- aJournalNode[[m]]
+  ISSN &lt;- xpathSApply(aJournalNode, &quot;./ISSN&quot;, xmlValue)
+  journalTitle &lt;- xpathSApply(aJournalNode, &quot;./Title&quot;, xmlValue)
+  ISOabbrevation &lt;- xpathSApply(aJournalNode, &quot;./ISOAbbreviation&quot;, xmlValue)
+  volume&lt;-xpathSApply(aJournalNode, &quot;./JournalIssue/Volume&quot;, xmlValue)
+  Issue &lt;-xpathSApply(aJournalNode, &quot;./JournalIssue/Issue&quot;, xmlValue)
+  
+  #pubYear&lt;-xpathSApply(aJournalNode, &quot;./JournalIssue/PubDate/Year&quot;, xmlValue)
+  #pubMonth &lt;-xpathSApply(aJournalNode, &quot;./JournalIssue/PubDate/Month&quot;, xmlValue)
+    
+    
+  if (length(ISSN) == 0)
+    ISSN &lt;- &quot;&quot;
+  if (length(journalTitle) == 0)
+    journalTitle &lt;- &quot;&quot;
+  if (length(ISOabbrevation) == 0)
+    ISOabbrevation &lt;- &quot;&quot;
+  #if (length(pubMonth) == 0)
+  #  pubMonth &lt;- &quot;&quot;
+
+  newJournal.df[m,1] &lt;- ISSN
+  newJournal.df[m,2] &lt;- journalTitle
+  newJournal.df[m,3] &lt;- ISOabbrevation
+  newJournal.df[m,4] &lt;- volume
+  newJournal.df[m,5] &lt;- Issue
+  #newJournal.df[m,6] &lt;- pubYear
+  #newJournal.df[m,7] &lt;- pubMonth
+}
+  </code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2NvbW1lbnRlZCBvdXQgc28gbm90IHNlZW4gaW4gYSBrbml0dGVkIGZpbGVcbiNuZXdKb3VybmFsLmRmXG5gYGAifQ== -->
+<pre class="r"><code>#commented out so not seen in a knitted file
+#newJournal.df</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubmV3QXJ0aWNsZS5kZiA8LSBkYXRhLmZyYW1lKFBNSUQgPSBudW1lcmljKCksICNcbiAgICAgICAgICAgICAgICAgICAgICAgICAgam91cm5hbElTU04gPSBjaGFyYWN0ZXIoKSxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgYXJ0aWNsZVRpdGxlID0gY2hhcmFjdGVyKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHBhZ2luYXRpb24gPSBjaGFyYWN0ZXIoKSxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgI2Vsb2NhdGlvbklEIGNhbiBoYXZlIG1vcmUgdGhlbiAxLiBuZWVkIGFub3RoZXIgdGFibGUgZm9yIHRoYXQ/XG4gICAgICAgICAgICAgICAgICAgICAgICAgICNzYW1lIHdpdGggYWJzdHJhY3RcbiAgICAgICAgICAgICAgICAgICAgICAgICAgI2FuZCBhdXRob3IgbGlzdC0gZGlmZmVyZW50IHRhYmxlPyB3aGF0IHRvIHVzZSBhcyBhIGtleT9cbiAgICAgICAgICAgICAgICAgICAgICAgICAgbGFuZ3VhZ2UgPSBjaGFyYWN0ZXIoKSxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgI2dyYW50IGxpc3Q/XG4gICAgICAgICAgICAgICAgICAgICAgICAgICNwdWJsaWNhdGlvbiB0eXBlIHRpc3Q/XG4gICAgICAgICAgICAgICAgICAgICAgICAgIGFydFllYXIgPSBudW1lcmljKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGFydE1vbnRoID0gbnVtZXJpYygpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBhcnREYXkgPSBudW1lcmljKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHB1YlllYXIgPSBudW1lcmljKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHB1Yk1vbnRoID0gY2hhcmFjdGVyKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGKVxuXG5jb2xuYW1lcyhuZXdBcnRpY2xlLmRmKSA8LSBjKFwiUE1JRFwiLFwiam91cm5hbElTU05cIiwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwiYXJ0aWNsZVRpdGxlXCIsXCJwYWdpbmF0aW9uXCIsXCJsYW5ndWFnZVwiLCBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXCJhcnRZZWFyXCIsIFwiYXJ0TW9udGhcIiwgXCJhcnREYXlcIiwgJ3B1YlllYXInLCBcInB1Yk1vbnRoXCIpI1xuXG5yIDwtIHhtbFJvb3QoeG1sX2RhdGEpXG5cbmZvciAobSBpbiAxOjE5KVxue1xuICBcbiAgYW5BcnRpY2xlTm9kZSA8LSByW1ttXV1bWzFdXVtbJ0FydGljbGUnXV0jW1snSm91cm5hbCddXSAjXG5cbiAgUE1JRCA8LSB4cGF0aFNBcHBseShyW1ttXV1bWzFdXSwgXCIuL1BNSURcIiwgeG1sVmFsdWUpXG4gIGpvdXJuYWxJU1NOIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9Kb3VybmFsL0lTU05cIiwgeG1sVmFsdWUpXG4gIGFydGljbGVUaXRsZSA8LSB4cGF0aFNBcHBseShhbkFydGljbGVOb2RlLCBcIi4vQXJ0aWNsZVRpdGxlXCIsIHhtbFZhbHVlKVxuICBwYWdpbmF0aW9uIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9QYWdpbmF0aW9uL01lZGxpbmVQZ25cIiwgeG1sVmFsdWUpXG4gIGxhbmd1YWdlIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9MYW5ndWFnZVwiLCB4bWxWYWx1ZSlcbiAgXG4gIGFydFllYXIgPC0geHBhdGhTQXBwbHkoYW5BcnRpY2xlTm9kZSwgXCIuL0FydGljbGVEYXRlL1llYXJcIiwgeG1sVmFsdWUpXG4gIGFydE1vbnRoIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9BcnRpY2xlRGF0ZS9Nb250aFwiLCB4bWxWYWx1ZSlcbiAgYXJ0RGF5IDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9BcnRpY2xlRGF0ZS9EYXlcIiwgeG1sVmFsdWUpXG4gIFxuICBwdWJZZWFyIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9Kb3VybmFsL0pvdXJuYWxJc3N1ZS9QdWJEYXRlL1llYXJcIiwgeG1sVmFsdWUpXG4gIHB1Yk1vbnRoIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsIFwiLi9Kb3VybmFsL0pvdXJuYWxJc3N1ZS9QdWJEYXRlL01vbnRoXCIsIHhtbFZhbHVlKVxuICBcbiAgXG4gIGlmIChsZW5ndGgoUE1JRCkgPT0gMClcbiAgICBQTUlEIDwtIFwiXCJcbiAgaWYgKGxlbmd0aChqb3VybmFsSVNTTikgPT0gMClcbiAgICBqb3VybmFsSVNTTiA8LSBcIlwiXG4gIGlmIChsZW5ndGgoYXJ0aWNsZVRpdGxlKSA9PSAwKVxuICAgIGFydGljbGVUaXRsZSA8LSBcIlwiXG4gIGlmIChsZW5ndGgocGFnaW5hdGlvbikgPT0gMClcbiAgICBwYWdpbmF0aW9uIDwtIFwiXCJcbiAgaWYgKGxlbmd0aChsYW5ndWFnZSkgPT0gMClcbiAgICBsYW5ndWFnZSA8LSBcIlwiXG4gIGlmIChsZW5ndGgoYXJ0WWVhcikgPT0gMClcbiAgICBhcnRZZWFyIDwtIFwiXCJcbiAgaWYgKGxlbmd0aChhcnRNb250aCkgPT0gMClcbiAgICBhcnRNb250aCA8LSBcIlwiXG4gIGlmIChsZW5ndGgoYXJ0RGF5KSA9PSAwKVxuICAgIGFydERheSA8LSBcIlwiXG4gIFxuICBpZiAobGVuZ3RoKHB1YlllYXIpID09IDApXG4gICAgcHViWWVhciA8LSBcIlwiXG4gIGlmIChsZW5ndGgocHViTW9udGgpID09IDApXG4gICAgcHViTW9udGggPC0gXCJcIlxuXG4gIG5ld0FydGljbGUuZGZbbSwxXSA8LSBQTUlEXG4gIG5ld0FydGljbGUuZGZbbSwyXSA8LSBqb3VybmFsSVNTTlxuICBuZXdBcnRpY2xlLmRmW20sM10gPC0gYXJ0aWNsZVRpdGxlXG4gIG5ld0FydGljbGUuZGZbbSw0XSA8LSBwYWdpbmF0aW9uXG4gIG5ld0FydGljbGUuZGZbbSw1XSA8LSBsYW5ndWFnZVxuICBuZXdBcnRpY2xlLmRmW20sNl0gPC0gYXJ0WWVhclxuICBuZXdBcnRpY2xlLmRmW20sN10gPC0gYXJ0TW9udGhcbiAgbmV3QXJ0aWNsZS5kZlttLDhdIDwtIGFydERheVxuICBuZXdBcnRpY2xlLmRmW20sOV0gPC0gcHViWWVhclxuICBuZXdBcnRpY2xlLmRmW20sMTBdIDwtIHB1Yk1vbnRoXG59XG5cbmBgYCJ9 -->
+<pre class="r"><code>newArticle.df &lt;- data.frame(PMID = numeric(), #
+                          journalISSN = character(),
+                          articleTitle = character(),
+                          pagination = character(),
+                          #elocationID can have more then 1. need another table for that?
+                          #same with abstract
+                          #and author list- different table? what to use as a key?
+                          language = character(),
+                          #grant list?
+                          #publication type tist?
+                          artYear = numeric(),
+                          artMonth = numeric(),
+                          artDay = numeric(),
+                          pubYear = numeric(),
+                          pubMonth = character(),
+                          stringsAsFactors = F)
+
+colnames(newArticle.df) &lt;- c(&quot;PMID&quot;,&quot;journalISSN&quot;, 
+                             &quot;articleTitle&quot;,&quot;pagination&quot;,&quot;language&quot;, 
+                             &quot;artYear&quot;, &quot;artMonth&quot;, &quot;artDay&quot;, &#39;pubYear&#39;, &quot;pubMonth&quot;)#
+
+r &lt;- xmlRoot(xml_data)
+
+for (m in 1:19)
+{
+  
+  anArticleNode &lt;- r[[m]][[1]][[&#39;Article&#39;]]#[[&#39;Journal&#39;]] #
+
+  PMID &lt;- xpathSApply(r[[m]][[1]], &quot;./PMID&quot;, xmlValue)
+  journalISSN &lt;- xpathSApply(anArticleNode, &quot;./Journal/ISSN&quot;, xmlValue)
+  articleTitle &lt;- xpathSApply(anArticleNode, &quot;./ArticleTitle&quot;, xmlValue)
+  pagination &lt;- xpathSApply(anArticleNode, &quot;./Pagination/MedlinePgn&quot;, xmlValue)
+  language &lt;- xpathSApply(anArticleNode, &quot;./Language&quot;, xmlValue)
+  
+  artYear &lt;- xpathSApply(anArticleNode, &quot;./ArticleDate/Year&quot;, xmlValue)
+  artMonth &lt;- xpathSApply(anArticleNode, &quot;./ArticleDate/Month&quot;, xmlValue)
+  artDay &lt;- xpathSApply(anArticleNode, &quot;./ArticleDate/Day&quot;, xmlValue)
+  
+  pubYear &lt;- xpathSApply(anArticleNode, &quot;./Journal/JournalIssue/PubDate/Year&quot;, xmlValue)
+  pubMonth &lt;- xpathSApply(anArticleNode, &quot;./Journal/JournalIssue/PubDate/Month&quot;, xmlValue)
+  
+  
+  if (length(PMID) == 0)
+    PMID &lt;- &quot;&quot;
+  if (length(journalISSN) == 0)
+    journalISSN &lt;- &quot;&quot;
+  if (length(articleTitle) == 0)
+    articleTitle &lt;- &quot;&quot;
+  if (length(pagination) == 0)
+    pagination &lt;- &quot;&quot;
+  if (length(language) == 0)
+    language &lt;- &quot;&quot;
+  if (length(artYear) == 0)
+    artYear &lt;- &quot;&quot;
+  if (length(artMonth) == 0)
+    artMonth &lt;- &quot;&quot;
+  if (length(artDay) == 0)
+    artDay &lt;- &quot;&quot;
+  
+  if (length(pubYear) == 0)
+    pubYear &lt;- &quot;&quot;
+  if (length(pubMonth) == 0)
+    pubMonth &lt;- &quot;&quot;
+
+  newArticle.df[m,1] &lt;- PMID
+  newArticle.df[m,2] &lt;- journalISSN
+  newArticle.df[m,3] &lt;- articleTitle
+  newArticle.df[m,4] &lt;- pagination
+  newArticle.df[m,5] &lt;- language
+  newArticle.df[m,6] &lt;- artYear
+  newArticle.df[m,7] &lt;- artMonth
+  newArticle.df[m,8] &lt;- artDay
+  newArticle.df[m,9] &lt;- pubYear
+  newArticle.df[m,10] &lt;- pubMonth
+}
 </code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSBcIjIwMTMgMDcgMjJcIiBcIjIwMTQgMDEgMTRcIiBcIjIwMTMgMDEgMDNcIiBcIjIwMTMgMDQgMDhcIiBcIjIwMTMgMDcgMDFcIiBcIjIwMTMgMDUgMjhcIiBcIjIwMTMgMDUgMTVcIiBcIjIwMTMgMDcgMDhcIlxuIFs5XSBcIjIwMTMgMDEgMDdcIiBcIjIwMTIgMDUgMDRcIiBcIjIwMTIgMDcgMjVcIiBcIjIwMTIgMDUgMTRcIiBcIjIwMTIgMDcgMzBcIiBcIjIwMTMgMDEgMDJcIiBcIjIwMTIgMDkgMDdcIiBcIjIwMTIgMDggMTVcIlxuWzE3XSBcIjIwMTIgMDQgMjNcIiBcIjIwMTMgMDEgMTdcIiBcIjIwMTIgMTAgMTVcIlxuIn0= -->
-<pre><code> [1] &quot;2013 07 22&quot; &quot;2014 01 14&quot; &quot;2013 01 03&quot; &quot;2013 04 08&quot; &quot;2013 07 01&quot; &quot;2013 05 28&quot; &quot;2013 05 15&quot; &quot;2013 07 08&quot;
- [9] &quot;2013 01 07&quot; &quot;2012 05 04&quot; &quot;2012 07 25&quot; &quot;2012 05 14&quot; &quot;2012 07 30&quot; &quot;2013 01 02&quot; &quot;2012 09 07&quot; &quot;2012 08 15&quot;
-[17] &quot;2012 04 23&quot; &quot;2013 01 17&quot; &quot;2012 10 15&quot;</code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2NvbW1lbnRlZCBvdXQgc28gbm90IHNlZW4gaW4gYSBrbml0dGVkIGZpbGVcbiNuZXdBcnRpY2xlLmRmXG5gYGAifQ== -->
+<pre class="r"><code>#commented out so not seen in a knitted file
+#newArticle.df</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5uZXdBdXRob3IuZGYgPC0gZGF0YS5mcmFtZShQTUlEID0gbnVtZXJpYygpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBsYXN0TmFtZSA9IGNoYXJhY3RlcigpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBmb3JlTmFtZSA9IGNoYXJhY3RlcigpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBpbml0aWFscyA9IGNoYXJhY3RlcigpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBhZmZpbGlhdGlvbiA9IGNoYXJhY3RlcigpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRilcblxuY29sbmFtZXMobmV3QXV0aG9yLmRmKSA8LSBjKFwiUE1JRFwiLFwibGFzdE5hbWVcIixcImZvcmVOYW1lXCIsIFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcImluaXRpYWxzXCIsXCJhZmZpbGlhdGlvblwiKVxuXG5yIDwtIHhtbFJvb3QoeG1sX2RhdGEpXG5yb3dDb3VudCA8LSAxXG5mb3IgKG0gaW4gMToxOSlcbntcblxuICBQTUlEIDwtIHhwYXRoU0FwcGx5KHJbW21dXVtbMV1dLCBcIi4vUE1JRFwiLCB4bWxWYWx1ZSlcbiAgaWYgKGxlbmd0aChQTUlEKSA9PSAwKVxuICAgIFBNSUQgPC0gXCJcIlxuICBcbiAgYW5BdXRob3JOb2RlTGlzdCA8LSByW1ttXV1bWzFdXVtbJ0FydGljbGUnXV1bWydBdXRob3JMaXN0J11dIFxuICBcbiAgajwteG1sU2l6ZShhbkF1dGhvck5vZGVMaXN0KVxuICBcbiAgXG4gIGZvciAoayBpbiAxOmope1xuICAgIFxuICAgIG5vZGUgPC1hbkF1dGhvck5vZGVMaXN0W1trXV1cbiAgICBsYXN0TmFtZSA8LSB4cGF0aFNBcHBseShub2RlLCBcIi4vTGFzdE5hbWVcIiwgeG1sVmFsdWUpXG4gICAgZm9yZU5hbWUgPC0geHBhdGhTQXBwbHkobm9kZSwgXCIuL0ZvcmVOYW1lXCIsIHhtbFZhbHVlKVxuICAgIGluaXRpYWxzIDwtIHhwYXRoU0FwcGx5KG5vZGUsIFwiLi9Jbml0aWFsc1wiLCB4bWxWYWx1ZSlcbiAgICBhZmZpbGlhdGlvbiA8LSB4cGF0aFNBcHBseShub2RlLCBcIi4vQWZmaWxpYXRpb25cIiwgeG1sVmFsdWUpXG4gICAgXG4gICAgaWYgKGxlbmd0aChsYXN0TmFtZSkgPT0gMClcbiAgICAgIGxhc3ROYW1lIDwtIFwiXCJcbiAgICBpZiAobGVuZ3RoKGZvcmVOYW1lKSA9PSAwKVxuICAgICAgZm9yZU5hbWUgPC0gXCJcIlxuICAgIGlmIChsZW5ndGgoaW5pdGlhbHMpID09IDApXG4gICAgICBpbml0aWFscyA8LSBcIlwiXG4gICAgaWYgKGxlbmd0aChhZmZpbGlhdGlvbikgPT0gMClcbiAgICAgIGFmZmlsaWF0aW9uIDwtIFwiXCJcbiAgICBcbiAgICBuZXdBdXRob3IuZGZbcm93Q291bnQsMV0gPC0gUE1JRFxuICAgIG5ld0F1dGhvci5kZltyb3dDb3VudCwyXSA8LSBsYXN0TmFtZVxuICAgIG5ld0F1dGhvci5kZltyb3dDb3VudCwzXSA8LSBmb3JlTmFtZVxuICAgIG5ld0F1dGhvci5kZltyb3dDb3VudCw0XSA8LSBpbml0aWFsc1xuICAgIG5ld0F1dGhvci5kZltyb3dDb3VudCw1XSA8LSBhZmZpbGlhdGlvblxuICAgIFxuICAgIFxuICAgIHJvd0NvdW50IDwtIHJvd0NvdW50KzFcbiAgfVxuXG59XG4gIFxuYGBgIn0= -->
+<pre class="r"><code>
+newAuthor.df &lt;- data.frame(PMID = numeric(),
+                          lastName = character(),
+                          foreName = character(),
+                          initials = character(),
+                          affiliation = character(),
+                          stringsAsFactors = F)
+
+colnames(newAuthor.df) &lt;- c(&quot;PMID&quot;,&quot;lastName&quot;,&quot;foreName&quot;, 
+                             &quot;initials&quot;,&quot;affiliation&quot;)
+
+r &lt;- xmlRoot(xml_data)
+rowCount &lt;- 1
+for (m in 1:19)
+{
+
+  PMID &lt;- xpathSApply(r[[m]][[1]], &quot;./PMID&quot;, xmlValue)
+  if (length(PMID) == 0)
+    PMID &lt;- &quot;&quot;
+  
+  anAuthorNodeList &lt;- r[[m]][[1]][[&#39;Article&#39;]][[&#39;AuthorList&#39;]] 
+  
+  j&lt;-xmlSize(anAuthorNodeList)
+  
+  
+  for (k in 1:j){
+    
+    node &lt;-anAuthorNodeList[[k]]
+    lastName &lt;- xpathSApply(node, &quot;./LastName&quot;, xmlValue)
+    foreName &lt;- xpathSApply(node, &quot;./ForeName&quot;, xmlValue)
+    initials &lt;- xpathSApply(node, &quot;./Initials&quot;, xmlValue)
+    affiliation &lt;- xpathSApply(node, &quot;./Affiliation&quot;, xmlValue)
+    
+    if (length(lastName) == 0)
+      lastName &lt;- &quot;&quot;
+    if (length(foreName) == 0)
+      foreName &lt;- &quot;&quot;
+    if (length(initials) == 0)
+      initials &lt;- &quot;&quot;
+    if (length(affiliation) == 0)
+      affiliation &lt;- &quot;&quot;
+    
+    newAuthor.df[rowCount,1] &lt;- PMID
+    newAuthor.df[rowCount,2] &lt;- lastName
+    newAuthor.df[rowCount,3] &lt;- foreName
+    newAuthor.df[rowCount,4] &lt;- initials
+    newAuthor.df[rowCount,5] &lt;- affiliation
+    
+    
+    rowCount &lt;- rowCount+1
+  }
+
+}
+  </code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2NvbW1lbnRlZCBvdXQgc28gbm90IHNlZW4gaW4gYSBrbml0dGVkIGZpbGVcbiNuZXdBdXRob3IuZGZcbmBgYCJ9 -->
+<pre class="r"><code>#commented out so not seen in a knitted file
+#newAuthor.df</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5uZXdIaXN0b3J5LmRmIDwtIGRhdGEuZnJhbWUoUE1JRCA9IG51bWVyaWMoKSxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgcHViU3RhdHVzID0gY2hhcmFjdGVyKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHllYXIgPSBudW1lcmljKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgIG1vbnRoID0gbnVtZXJpYygpLFxuICAgICAgICAgICAgICAgICAgICAgICAgICBkYXkgPSBudW1lcmljKCksXG4gICAgICAgICAgICAgICAgICAgICAgICAgICNob3VyIGFuZCBtaW51dGUgbm90IHVzZWZ1bCBmb3IgYW5hbHlzaXM/XG4gICAgICAgICAgICAgICAgICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGKVxuXG5jb2xuYW1lcyhuZXdIaXN0b3J5LmRmKSA8LSBjKFwiUE1JRFwiLFwicHViU3RhdHVzXCIsXCJ5ZWFyXCIsIFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcIm1vbnRoXCIsXCJkYXlcIilcblxuciA8LSB4bWxSb290KHhtbF9kYXRhKVxucm93Q291bnQgPC0gMVxuZm9yIChtIGluIDE6MTkpXG57XG5cbiAgUE1JRCA8LSB4cGF0aFNBcHBseShyW1ttXV1bWzFdXSwgXCIuL1BNSURcIiwgeG1sVmFsdWUpXG4gIGlmIChsZW5ndGgoUE1JRCkgPT0gMClcbiAgICBQTUlEIDwtIFwiXCJcbiAgXG4gIGFIaXN0b3J5TGlzdCA8LSByW1ttXV1bWydQdWJtZWREYXRhJ11dW1snSGlzdG9yeSddXVxuICBcbiAgajwteG1sU2l6ZShhSGlzdG9yeUxpc3QpXG4gIFxuICBcbiAgZm9yIChrIGluIDE6ail7XG4gICAgXG4gICAgbm9kZSA8LWFIaXN0b3J5TGlzdFtba11dXG4gICAgXG4gICAgcHViU3RhdHVzIDwtIHhtbEdldEF0dHIobm9kZSwnUHViU3RhdHVzJylcblxuICAgIHllYXIgPC0geHBhdGhTQXBwbHkobm9kZSwgXCIuL1llYXJcIiwgeG1sVmFsdWUpXG4gICAgbW9udGggPC0geHBhdGhTQXBwbHkobm9kZSwgXCIuL01vbnRoXCIsIHhtbFZhbHVlKVxuICAgIGRheSA8LSB4cGF0aFNBcHBseShub2RlLCBcIi4vRGF5XCIsIHhtbFZhbHVlKVxuICAgIFxuXG4gICAgaWYgKGxlbmd0aChwdWJTdGF0dXMpID09IDApXG4gICAgICBwdWJTdGF0dXMgPC0gXCJcIlxuICAgIGlmIChsZW5ndGgoeWVhcikgPT0gMClcbiAgICAgIHllYXIgPC0gXCJcIlxuICAgIGlmIChsZW5ndGgobW9udGgpID09IDApXG4gICAgICBtb250aCA8LSBcIlwiXG4gICAgaWYgKGxlbmd0aChkYXkpID09IDApXG4gICAgICBkYXkgPC0gXCJcIlxuICAgIFxuICAgIG5ld0hpc3RvcnkuZGZbcm93Q291bnQsMV0gPC0gUE1JRFxuICAgIG5ld0hpc3RvcnkuZGZbcm93Q291bnQsMl0gPC0gcHViU3RhdHVzXG4gICAgbmV3SGlzdG9yeS5kZltyb3dDb3VudCwzXSA8LSB5ZWFyXG4gICAgbmV3SGlzdG9yeS5kZltyb3dDb3VudCw0XSA8LSBtb250aFxuICAgIG5ld0hpc3RvcnkuZGZbcm93Q291bnQsNV0gPC0gZGF5XG4gICAgXG4gICAgXG4gICAgcm93Q291bnQgPC0gcm93Q291bnQrMVxuICB9XG5cbn1cbiAgXG5gYGAifQ== -->
+<pre class="r"><code>
+newHistory.df &lt;- data.frame(PMID = numeric(),
+                          pubStatus = character(),
+                          year = numeric(),
+                          month = numeric(),
+                          day = numeric(),
+                          #hour and minute not useful for analysis?
+                          stringsAsFactors = F)
+
+colnames(newHistory.df) &lt;- c(&quot;PMID&quot;,&quot;pubStatus&quot;,&quot;year&quot;, 
+                             &quot;month&quot;,&quot;day&quot;)
+
+r &lt;- xmlRoot(xml_data)
+rowCount &lt;- 1
+for (m in 1:19)
+{
+
+  PMID &lt;- xpathSApply(r[[m]][[1]], &quot;./PMID&quot;, xmlValue)
+  if (length(PMID) == 0)
+    PMID &lt;- &quot;&quot;
+  
+  aHistoryList &lt;- r[[m]][[&#39;PubmedData&#39;]][[&#39;History&#39;]]
+  
+  j&lt;-xmlSize(aHistoryList)
+  
+  
+  for (k in 1:j){
+    
+    node &lt;-aHistoryList[[k]]
+    
+    pubStatus &lt;- xmlGetAttr(node,&#39;PubStatus&#39;)
+
+    year &lt;- xpathSApply(node, &quot;./Year&quot;, xmlValue)
+    month &lt;- xpathSApply(node, &quot;./Month&quot;, xmlValue)
+    day &lt;- xpathSApply(node, &quot;./Day&quot;, xmlValue)
+    
+
+    if (length(pubStatus) == 0)
+      pubStatus &lt;- &quot;&quot;
+    if (length(year) == 0)
+      year &lt;- &quot;&quot;
+    if (length(month) == 0)
+      month &lt;- &quot;&quot;
+    if (length(day) == 0)
+      day &lt;- &quot;&quot;
+    
+    newHistory.df[rowCount,1] &lt;- PMID
+    newHistory.df[rowCount,2] &lt;- pubStatus
+    newHistory.df[rowCount,3] &lt;- year
+    newHistory.df[rowCount,4] &lt;- month
+    newHistory.df[rowCount,5] &lt;- day
+    
+    
+    rowCount &lt;- rowCount+1
+  }
+
+}
+  </code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2NvbW1lbnRlZCBvdXQgc28gbm90IHNlZW4gaW4gYSBrbml0dGVkIGZpbGVcbiNuZXdIaXN0b3J5LmRmXG5gYGAifQ== -->
+<pre class="r"><code>#commented out so not seen in a knitted file
+#newHistory.df</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Tables are created here</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIElGIEVYSVNUUyBKb3VybmFsXG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE IF EXISTS Journal</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIElGIEVYSVNUUyBBcnRpY2xlXG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE IF EXISTS Article</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIElGIEVYSVNUUyBBdXRob3JzaGlwXG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE IF EXISTS Authorship</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIElGIEVYSVNUUyBBdXRob3JcbmBgYCJ9 -->
+<pre class="sql"><code>DROP TABLE IF EXISTS Author</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIElGIEVYSVNUUyBIaXN0b3J5XG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE IF EXISTS History</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGJMaXN0VGFibGVzKGRicylcbmBgYCJ9 -->
+<pre class="r"><code>dbListTables(dbs)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiQXJ0aWNsZVwiICAgICAgICAgXCJBdXRob3JcIiAgICAgICAgICBcIkF1dGhvcnNoaXBcIiAgICAgIFwiSGlzdG9yeVwiICAgICAgICAgXCJKb3VybmFsXCIgICAgICAgIFxuWzZdIFwiYXV0aG9yRGF0YVwiICAgICAgXCJzcWxpdGVfc2VxdWVuY2VcIlxuIn0= -->
+<pre><code>[1] &quot;Article&quot;         &quot;Author&quot;          &quot;Authorship&quot;      &quot;History&quot;         &quot;Journal&quot;        
+[6] &quot;authorData&quot;      &quot;sqlite_sequence&quot;</code></pre>
 <!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBKb3VybmFsIChcbiAgSVNTTiB2YXJjaGFyKDI1NSkgcHJpbWFyeSBrZXksXG4gIHRpdGxlIHZhcmNoYXIoMjU1KSxcbiAgSVNPYWJicmV2YXRpb24gdmFyY2hhcigyNTUpXG5cbiAgKTtcbmBgYCJ9 -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS Journal (
+  ISSN varchar(255) primary key,
+  title varchar(255),
+  ISOabbrevation varchar(255)
+
+  );</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>articleKey INTEGER primary key AUTOINCREMENT,</p>
+<p>year int(255), month int(255), day int(255),</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBBcnRpY2xlIChcbiAgXG4gIFBNSUQgaW50KDI1NSkgTk9UIE5VTEwsXG4gIGpvdXJuYWxJU1NOIHZhcmNoYXIoMjU1KSxcbiAgdGl0bGUgdmFyY2hhcigyNTUpLFxuICBwYWdpbmF0aW9uIHZhcmNoYXIoMjU1KSxcbiAgbGFuZ3VhZ2UgdmFyY2hhcigyNTUpLFxuXG5cbiAgRk9SRUlHTiBLRVkgKGpvdXJuYWxJU1NOICkgUkVGRVJFTkNFUyBKb3VybmFsKElTU04pXG4gICk7XG5gYGAifQ== -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS Article (
+  
+  PMID int(255) NOT NULL,
+  journalISSN varchar(255),
+  title varchar(255),
+  pagination varchar(255),
+  language varchar(255),
+
+
+  FOREIGN KEY (journalISSN ) REFERENCES Journal(ISSN)
+  );</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>histKey INTEGER primary key AUTOINCREMENT,</p>
+<p>use compound key instead?</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBIaXN0b3J5IChcblxuICBQTUlEIGludCgyNTUpLFxuICBwdWJTdGF0dXMgdmFyY2hhcigyNTUpLFxuICB5ZWFyIGludCgyNTUpLFxuICBtb250aCBpbnQoMjU1KSxcbiAgZGF5IGludCgyNTUpLFxuICBQUklNQVJZICBLRVkgKFBNSUQsIHB1YlN0YXR1cyksXG4gIEZPUkVJR04gS0VZIChQTUlEKSBSRUZFUkVOQ0VTIEFydGljbGUoUE1JRClcbiAgKTtcbmBgYCJ9 -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS History (
+
+  PMID int(255),
+  pubStatus varchar(255),
+  year int(255),
+  month int(255),
+  day int(255),
+  PRIMARY  KEY (PMID, pubStatus),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID)
+  );</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>adding in this lookup table might need compound primary key?</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBBdXRob3JzaGlwIChcbiAgbG9va3VwS2V5IElOVEVHRVIgcHJpbWFyeSBrZXkgQVVUT0lOQ1JFTUVOVCxcbiAgUE1JRCBpbnQoMjU1KSxcbiAgbGFzdE5hbWUgdmFyY2hhcigyNTUpLFxuICBmb3JlTmFtZSB2YXJjaGFyKDI1NSksXG4gIEZPUkVJR04gS0VZIChQTUlEKSBSRUZFUkVOQ0VTIEFydGljbGUoUE1JRCksXG4gIEZPUkVJR04gS0VZIChsYXN0TmFtZSwgZm9yZU5hbWUpIFJFRkVSRU5DRVMgQXV0aG9yKGxhc3ROYW1lLCBmb3JlTmFtZSlcbiAgKTtcbmBgYCJ9 -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS Authorship (
+  lookupKey INTEGER primary key AUTOINCREMENT,
+  PMID int(255),
+  lastName varchar(255),
+  foreName varchar(255),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID),
+  FOREIGN KEY (lastName, foreName) REFERENCES Author(lastName, foreName)
+  );</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>PMID int(255),</p>
+<p>, FOREIGN KEY (PMID) REFERENCES Article(PMID)</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBBdXRob3IgKFxuICBhdXRob3JLZXkgSU5URUdFUiBwcmltYXJ5IGtleSBBVVRPSU5DUkVNRU5ULFxuXG4gIGxhc3ROYW1lIHZhcmNoYXIoMjU1KSxcbiAgZm9yZU5hbWUgdmFyY2hhcigyNTUpLFxuICBpbml0aWFscyB2YXJjaGFyKDI1NSksXG4gIGFmZmlsaWF0aW9uIHZhcmNoYXIoMjU1KVxuICApO1xuYGBgIn0= -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS Author (
+  authorKey INTEGER primary key AUTOINCREMENT,
+
+  lastName varchar(255),
+  foreName varchar(255),
+  initials varchar(255),
+  affiliation varchar(255)
+  );</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Inserting data into the tables. Will likely need to be adjusted</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGJXcml0ZVRhYmxlKGRicywgXCJqb3VybmFsRGF0YVwiLG5ld0pvdXJuYWwuZGYgKVxuYGBgIn0= -->
+<pre class="r"><code>dbWriteTable(dbs, &quot;journalData&quot;,newJournal.df )</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCBkaXN0aW5jdCBcbklTU04sam91cm5hbFRpdGxlLElTT2FiYnJldmF0aW9uIGZyb20gam91cm5hbERhdGEgXG5gYGAifQ== -->
+<pre class="sql"><code>
+SELECT distinct 
+ISSN,journalTitle,ISOabbrevation from journalData </code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUE0MVVYVy9UTUJRTjJ6cTJpazFNNHdVaElRdUpCNUJTNWJzSlBHM2QwRnJCVmpXYnRGZlA5VmF6Tkk1c2R6Q2UrTW44QXNwMTZqUnBINEFIMTc3bmZweWJjNjg2T3JuMjI5ZHR5N0kyclMwNG15MTRXcTJyeTA5MmJGbGJHMkE4QWNldXZyOUQwR0VaYVZuUHk3Tnc3THBoR05tKzcwWTFFSVIyMTNNYWdCZllRZVRGTmVCN2RoeUY3Z3JnUlhFandvdHQxL1c5MVpSZ3BhaU82SVpMSUlBSU4wbWFMSTd0K0dFTnhGM2ZEa0l2V1FJSnBFU2U0NjhWRGVzSUorbmFqaHZVZlFRUmZJdnJYRGRTUXRzTjRtUk5sLzVabXFLdmZDWnluS0VQU0Uwb21zNGttV1ZjM3RPTUtrQXJMNzlGWjF3V1RHTzNYS0Mwb0lUQk81MkpPeW9lVGNIOW9Yd2tFeTc1RkN0R3BFSGZwVXJ3ZS9vUjRXWTVRZ1c5RWZBbVRBQWxKUERjSkx3ZDBUdXd3SWR6S3FFdHlUQTh4NmpBTEVkVE9tYUU1ZFFFSnlsbFAyYUNtZzlvTUdqeldEREY1QVNkRml5amhYeEVSMUp5Nkx6QjlyNlhzWndSblNQVWhCZFkxNWNsbjZEUUY5VzNwRmlRaWNsNGRRbVZCelVSaGp6Qml3eEx0VlRpcU9xY1oveXVRZytIVUJzcndRZ1NlTHppUWljTU9DU1ZWZWNFdkxucGdxaloxTVM5YnZDU3F2RmFKaE8xTTh4NGl2aFNwRlphMUlwdDkzQU82aHZyNEhod2hWaXVLRlJWcGVyRzhhYkJwUDI1WkEvUUZnYXBseU5ZM2FlVzNxZkJYM2RoZTdFTGxSNHdhTFJRQ2czMWJML1FzWEU5TldNMTVrczlwQTY2S0NmVVFTTTlHSDNKVGtVM1FFZi9PNFo5TXdZMEtvZFFDUUVUNktCZUtmdW9LZm5lQUdsMjAraFM0YytnOE1YNTZiOFYzdEVLOTNOVnRmcGlvQzJqWjAvcnFUOTc5YitzbGVNcGxVYmZUUU51OWRQMDNMeWZtVVcvWkNxcmFQZjc2UVcrdVJIMFliSGZheVVKS0ZPVnJNRDJHQ3ZjdVJYQXRoYStLL2kzVHRYRkhweU5uL0F6bjg5L3dmVmJuejhkSHVvdm13VUFBQT09In0= -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["ISSN"],"name":[1],"type":["chr"],"align":["left"]},{"label":["journalTitle"],"name":[2],"type":["chr"],"align":["left"]},{"label":["ISOabbrevation"],"name":[3],"type":["chr"],"align":["left"]}],"data":[{"1":"1556-3316","2":"HSS journal : the musculoskeletal journal of Hospital for Special Surgery","3":"HSS J"},{"1":"1545-7206","2":"Psychosomatics","3":"Psychosomatics"},{"1":"1524-4628","2":"Stroke; a journal of cerebral circulation","3":"Stroke"},{"1":"1532-8651","2":"Regional anesthesia and pain medicine","3":"Reg Anesth Pain Med"},{"1":"1532-2688","2":"Seizure : the journal of the British Epilepsy Association","3":"Seizure"},{"1":"1528-1132","2":"Clinical orthopaedics and related research","3":"Clin. Orthop. Relat. Res."},{"1":"1532-8406","2":"The Journal of arthroplasty","3":"J Arthroplasty"},{"1":"1528-1175","2":"Anesthesiology","3":"Anesthesiology"},{"1":"1432-1998","2":"Pediatric radiology","3":"Pediatr Radiol"},{"1":"1530-0358","2":"Diseases of the colon and rectum","3":"Dis. Colon Rectum"},{"1":"1873-4529","2":"Journal of clinical anesthesia","3":"J Clin Anesth"},{"1":"1932-6203","2":"PloS one","3":"PLoS ONE"},{"1":"1528-1159","2":"Spine","3":"Spine"},{"1":"1097-0142","2":"Cancer","3":"Cancer"},{"1":"1464-410X","2":"BJU international","3":"BJU Int."},{"1":"1525-1489","2":"Journal of intensive care medicine","3":"J Intensive Care Med"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5JTlNFUlQgSU5UTyBKb3VybmFsIChJU1NOICwgdGl0bGUsSVNPYWJicmV2YXRpb24pXG5TRUxFQ1QgIGRpc3RpbmN0IElTU04sIGpvdXJuYWxUaXRsZSwgSVNPYWJicmV2YXRpb25cbkZST00gam91cm5hbERhdGFcblxuXG5gYGAifQ== -->
+<pre class="sql"><code>INSERT INTO Journal (ISSN , title,ISOabbrevation)
+SELECT  distinct ISSN, journalTitle, ISOabbrevation
+FROM journalData
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCBJU09hYmJyZXZhdGlvbiBmcm9tIEpvdXJuYWwgbGltaXQgNVxuYGBgIn0= -->
+<pre class="sql"><code>
+SELECT ISOabbrevation from Journal limit 5</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUExMU55d3FDUUJTOXBSWUtTZUFQK0FPNWFkTTJpS2dnRXFmQTdhaFRTdW5BakQxWC9YZVFYV1Bjek9MTXZlZHg1MFNMZU9yRURnQVlZQ0lNQzFld0R2dmxaQVpnOXBIMDBMRGIrY0NROXhjQXhtMUtHZGFLRUgramlCdktaNXB6eVV0YUY2bFU2b0RVZ3ArWllsN0VUdjY4WXJMTy9aQVdsYjlsbWJLR2hCV3ZxMkJhdDFYUmtrblYyNG51bXV4b2tnaDJ3eXBlNlNmcGhVcjl4TWxvVFlPandOKzB1QzM0UGVoYVJvaitHNSttYVQ0NHZpMStUdTQyQ0NzQkFBQT0ifQ== -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["ISOabbrevation"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"HSS J"},{"1":"Psychosomatics"},{"1":"Stroke"},{"1":"Reg Anesth Pain Med"},{"1":"Seizure"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIGpvdXJuYWxEYXRhXG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE journalData</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGJXcml0ZVRhYmxlKGRicywgXCJhcnRpY2xlRGF0YVwiLG5ld0FydGljbGUuZGYgKVxuYGBgIn0= -->
+<pre class="r"><code>dbWriteTable(dbs, &quot;articleData&quot;,newArticle.df )</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCBkaXN0aW5jdCBQTUlEIGZyb20gYXJ0aWNsZURhdGFcbmBgYCJ9 -->
+<pre class="sql"><code>
+SELECT distinct PMID from articleData</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUExMlF6MG9ETVJER3gzWVg3SUlnOURrc21YL0o1RjRFRDRLSVFxK0wybE5WYUFVOStzSytndXRVV2hQMzhHWHltL255QmVaMnVlSnUxUUhBRkJyWHRQVXJ0UGQzbHhjRzBFd2NUbnd3MjljUE44MS9Hd0RucnZsaGNFcHNTVWk1TUdiSkxJVkRSc1Jjc1FVV3F6aGFUcUZpTjVEK01jV1VVS1JpZjUyd3NMQ29Wbk9oU0xIa2VhREdPbzlZeVdKaHRLeXBablNrd29IRThqOE94aVVQVFZHMS9JY3BtY1JxemdFNTQyaWg3VXYvL0xRN0xQUFliRzZ1cjVaajQ4T20zNDJOM1dQLzFpL1dXODhZMldmYjEvZkZNZnZNTmZuMFl4aUdMeS9mZS8wQWYrSk9tUFlCQUFBPSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["PMID"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"23874253"},{"1":"23194934"},{"1":"23091119"},{"1":"23080348"},{"1":"23068970"},{"1":"23008025"},{"1":"22677144"},{"1":"22634871"},{"1":"22434554"},{"1":"22426260"},{"1":"22305625"},{"1":"22235286"},{"1":"22189576"},{"1":"22115762"},{"1":"22024892"},{"1":"22020835"},{"1":"21851550"},{"1":"21778465"},{"1":"21301391"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Remove year/ month/day? , year,month,day , artYear,artMonth,artDay</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5JTlNFUlQgSU5UTyBBcnRpY2xlIChQTUlEICwgam91cm5hbElTU04sIHRpdGxlLCBwYWdpbmF0aW9uLGxhbmd1YWdlKVxuU0VMRUNUICBQTUlELCBqb3VybmFsSVNTTiwgYXJ0aWNsZVRpdGxlLCBwYWdpbmF0aW9uLGxhbmd1YWdlXG5GUk9NIGFydGljbGVEYXRhXG5cblxuYGBgIn0= -->
+<pre class="sql"><code>INSERT INTO Article (PMID , journalISSN, title, pagination,language)
+SELECT  PMID, journalISSN, articleTitle, pagination,language
+FROM articleData
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCAqIGZyb20gQXJ0aWNsZSBsaW1pdCA1XG5gYGAifQ== -->
+<pre class="sql"><code>
+SELECT * from Article limit 5</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUE1VlUwVzdUTUJSdDFuV3dJaVFrZnNEUENGZHJrbVlwcjZ0QVE0RFF4bUNQdTAzdVVtK0pIZGxPMTd3Z25wSDRBLzZCTCtGVCtBSWt4bldXYUd2SEN3K083ZU43enowK3VjblI3RFFZbmc1N3ZWNi90MDJqUDZCbGIzRHk0U1dQZTczdExkcDRkTERyNWhVRlBYV25OQjY3MmN0Zi8vVGdWK1NkZmZyaG5mSHYzcG4zalBBblRjeE4wdTU0TW9sNEVJeWpXeUNjOEgxLzd3N2doenlNL1BnV0NId2VSNVB4R3VCSGNieEJuaDloSnBTRW5JRkVZeGRvQkxCenBWbXlFSG1xVWJKS3BxZ3pKV1RHbExZTFZXSXFFZ2JGdk1yQktsMHpVK2tNdFVERGhHVEV3RTZrc0ppeVl3c1d6WE0ybms0ajd1L3RSYU8yNXJjWkZpclRVQzVFWXFodXlrcktKMklOVml5UnFjb21xa0JIVnhLQzBocDJKZXlDcFZocU5JYjBObGtnVndKdGZWZWhWWmF1Y2tGcnk0RFVhbFhtWUd6OWdnRXJWZWtrVXphZmd5R0J4bFpwM1luNmZJQWE1MW90d1NRVXBobFZRazFxWENWanRicEVwb1c1dks4cUFhMnNjRUVvbFJHR2JHSXFTZkxLQ1hXRlRVMUhCZVVrUkxvVWVOVndGbWlCQXpsZlUwNm40dXVCS2twb2ZmaW5LMlNZTVNvUjRDeHU2a3VzTkt3RTNYdUoybFNHWlNncDZkNGJOYUtvY2t1Z29waTVJQ3VhcUJ2TExpWGltbU9kb3Z3alpCUXZHeStNZFJ5TmgyeHBSaXhSdXFUREJQSmNHV1ZWVVhjOVlEV0NMY2drcHM3Wkc1UlNyZmdyNG9YS2toOHkxWFFWNTgyR0Mrdk5PUmdIQWUrYWZHY2NUdmxrdjkwOThPTTQ1Tk91djNlaUlPWmgyTzc2QWQvczh6N0s3TCtXNngvdVFBSlp2OEc1L2Y3dDRheGRQN3BRbGFackhCNGZ2K3R5ckxBNXRwdGhDWm1RalhNdDhqQUhtVldRNFdhcGhQenZTblhnTUFVTG8zTk5LamJDZDdXNkduWHEzQzlsNndzOXJxK3ZmOVAweDQyL3ZoR1hNcUFFQUFBPSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["PMID"],"name":[1],"type":["int"],"align":["right"]},{"label":["journalISSN"],"name":[2],"type":["chr"],"align":["left"]},{"label":["title"],"name":[3],"type":["chr"],"align":["left"]},{"label":["pagination"],"name":[4],"type":["chr"],"align":["left"]},{"label":["language"],"name":[5],"type":["chr"],"align":["left"]}],"data":[{"1":"23874253","2":"1556-3316","3":"Regional anesthesia for children undergoing orthopedic ambulatory surgeries in the United States, 1996-2006.","4":"133-6","5":"eng"},{"1":"23194934","2":"1545-7206","3":"Demographics and perioperative outcome in patients with depression and anxiety undergoing total joint arthroplasty: a population-based study.","4":"149-57","5":"eng"},{"1":"23091119","2":"1524-4628","3":"Cerebrovascular reserve and stroke risk in patients with carotid stenosis or occlusion: a systematic review and meta-analysis.","4":"2884-91","5":"eng"},{"1":"23080348","2":"1532-8651","3":"Comparative perioperative outcomes associated with neuraxial versus general anesthesia for simultaneous bilateral total knee arthroplasty.","4":"638-44","5":"eng"},{"1":"23068970","2":"1532-2688","3":"Vagus nerve stimulation vs. corpus callosotomy in the treatment of Lennox-Gastaut syndrome: a meta-analysis.","4":"3-8","5":"eng"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIGFydGljbGVEYXRhXG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE articleData</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGJXcml0ZVRhYmxlKGRicywgXCJoaXN0RGF0YVwiLG5ld0hpc3RvcnkuZGYgKVxuYGBgIn0= -->
+<pre class="r"><code>dbWriteTable(dbs, &quot;histData&quot;,newHistory.df )</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCAgZGlzdGluY3QgKiBmcm9tIGhpc3REYXRhICB3aGVyZSBwdWJTdGF0dXMgPSBcInB1Ym1lZFwiIFxuYGBgIn0= -->
+<pre class="sql"><code>
+SELECT  distinct * from histData  where pubStatus = &quot;pubmed&quot; </code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUErV1VUVXZEUUJDR3Mya2p0aUFJL1IyV3pPejN2UWdlQlBFRGVsMXR4WU50cFUzUjN2ekQvZ1hyQkxMWlRWSjY4aUI0Mk9SOU1ydnZ6R3cydVoxTStYQTZUSktrbC9ScDlES1NTZlp3ZjNsaGtxU2ZFakFLRE1yN0IwMGFsVkVhNXpSR1ZlQVV1ZEVDSlE4TVZsZ3VBdWNXQUd6RUp1ZkNSS3lNMVhuRU5BRmx6YWkwQmlFaXB0VWFBZ3N1cEl6aUFoV3E0RWVHVXNWK3lDVWFGUmlNbFRwbUlNVEFPUXBqRzV3Ykh2ekFTSkF5NUFPdGpWQlJuT2ZBTGJUMjdlUnQrN2lZei80MU5YZWtqN1JQa2NZL29PSFhkTE5YcGl1UjF1bFN5SThvNXI4ZjVnOHE4eWVNOFk3d25nd09wSUZqYVV5N1FQSnFscDRpNzdpanFGWHdyRnRFMVc0aXhhQ3dzL1RRNXRSSmcxdXNaRGQvS05PMi9tWFowaTNtbTZxdHpMK2xtK3VyU2FVSGREN3ZDbGRzTno2NG03dTFYNzFZTFl1WENub3p0MnU3UDcyNmpYZjNENGN6VjdqeDg1b1N0NllQMXF2M3NTL29yQ3o4a3k3Ny9mNkxidC9sK0FIOU16Y2lwZ1VBQUE9PSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["PMID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["pubStatus"],"name":[2],"type":["chr"],"align":["left"]},{"label":["year"],"name":[3],"type":["chr"],"align":["left"]},{"label":["month"],"name":[4],"type":["chr"],"align":["left"]},{"label":["day"],"name":[5],"type":["chr"],"align":["left"]}],"data":[{"1":"23874253","2":"pubmed","3":"2013","4":"7","5":"23"},{"1":"23194934","2":"pubmed","3":"2012","4":"12","5":"1"},{"1":"23091119","2":"pubmed","3":"2012","4":"10","5":"24"},{"1":"23080348","2":"pubmed","3":"2012","4":"10","5":"20"},{"1":"23068970","2":"pubmed","3":"2012","4":"10","5":"17"},{"1":"23008025","2":"pubmed","3":"2012","4":"9","5":"26"},{"1":"22677144","2":"pubmed","3":"2012","4":"6","5":"9"},{"1":"22634871","2":"pubmed","3":"2012","4":"5","5":"29"},{"1":"22434554","2":"pubmed","3":"2012","4":"3","5":"22"},{"1":"22426260","2":"pubmed","3":"2012","4":"3","5":"20"},{"1":"22305625","2":"pubmed","3":"2012","4":"2","5":"7"},{"1":"22235286","2":"pubmed","3":"2012","4":"1","5":"12"},{"1":"22189576","2":"pubmed","3":"2011","4":"12","5":"23"},{"1":"22115762","2":"pubmed","3":"2011","4":"11","5":"26"},{"1":"22024892","2":"pubmed","3":"2011","4":"10","5":"26"},{"1":"22020835","2":"pubmed","3":"2011","4":"10","5":"25"},{"1":"21851550","2":"pubmed","3":"2011","4":"8","5":"20"},{"1":"21778465","2":"pubmed","3":"2011","4":"7","5":"23"},{"1":"21301391","2":"pubmed","3":"2011","4":"2","5":"9"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5JTlNFUlQgSU5UTyBIaXN0b3J5IChQTUlEICwgcHViU3RhdHVzLCB5ZWFyLCBtb250aCxkYXkpXG5TRUxFQ1QgIFBNSUQgLCBwdWJTdGF0dXMsIHllYXIsIG1vbnRoLGRheVxuRlJPTSBoaXN0RGF0YVxuXG5cbmBgYCJ9 -->
+<pre class="sql"><code>INSERT INTO History (PMID , pubStatus, year, month,day)
+SELECT  PMID , pubStatus, year, month,day
+FROM histData
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCAqIGZyb20gSGlzdG9yeSBsaW1pdCA1XG5gYGAifQ== -->
+<pre class="sql"><code>
+SELECT * from History limit 5</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUF3dHlpVERtaXVCaVlHQmdabUFCWW1aV0lKT0JOVFRFVGRlQ2dZR0ZDY2hoQkVwd2d1Z0tvQ0poa0N3UTg0Sm94aHl2cytnWUtDNEFWZ1BSeEZHVW1weWFXWmFhQXVNbkppZW5GcFFnK0trRnBVazVtY1VaVUQ1YmFsNUpVV29WakFlVXpBV3FoZHJId01CK0J3bmZoV0NZSE5DaFFCZURkQUV4T3hURDVQaWg3aElCWW5FSVJ2RWNhMTVpYm1veG11TlpBbnc5WGFCc1RxQlRna3NTUzBxTFlaS1ZxWWxGTU4yNStYa2xNQzh3cHlSV29wdWVuSk5ZRERNZEpzaVZrbGlTcUpkV0JMUVlUVGxuVVg2NUhzeEJJQjh3TlFDSi8vLy8vd1pTLzBBWUFHc2JkaTIzQVFBQSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["PMID"],"name":[1],"type":["int"],"align":["right"]},{"label":["pubStatus"],"name":[2],"type":["chr"],"align":["left"]},{"label":["year"],"name":[3],"type":["int"],"align":["right"]},{"label":["month"],"name":[4],"type":["int"],"align":["right"]},{"label":["day"],"name":[5],"type":["int"],"align":["right"]}],"data":[{"1":"23874253","2":"received","3":"2012","4":"1","5":"15"},{"1":"23874253","2":"accepted","3":"2012","4":"4","5":"16"},{"1":"23874253","2":"epublish","3":"2012","4":"6","5":"20"},{"1":"23874253","2":"entrez","3":"2013","4":"7","5":"23"},{"1":"23874253","2":"pubmed","3":"2013","4":"7","5":"23"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIGhpc3REYXRhXG5gYGAifQ== -->
+<pre class="sql"><code>DROP TABLE histData</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGJXcml0ZVRhYmxlKGRicywgXCJhdXRob3JEYXRhXCIsbmV3QXV0aG9yLmRmIClcbmBgYCJ9 -->
+<pre class="r"><code>dbWriteTable(dbs, &quot;authorData&quot;,newAuthor.df )</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCAgKiBmcm9tIGF1dGhvckRhdGFcbmBgYCJ9 -->
+<pre class="sql"><code>
+SELECT  * from authorData</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUE5MWF6WExieUJHV0tKSVM2ZHFxVkpJSG1BZVFIWUovb200TGtmb3hSY29NSWE4dFYrVXdJa2JFbUFCR05SaFFwcktIM1p6eURNa3B4MVF1ZVllOFY1eUd4QmtBSElLV1phN1d6b0VHR3NCTWYvMzExejBEeU1QTzIxcjViWGxqWTJOckl3Ky9yUUtjYmhSZW54ODliMjFzNUhOZ2JNS05VblQ4QUEvOUxyb0x2OS9BNzYvekd6dlZXbXV2WG0zVUhtOGIrL1g5V3YzcDdNcStZUmo3MzVEZHF0VHFyYS9JYnJiMjl5cFBhQU9BYW1OdGRyVzV0MmZVNjJ1MGdaMDk0K25zZXEzZWFOVFhhRmViMVdibDY3RnJsVVl6bWE5MTI5VmFvOXBxZnJ1MjBkcHY3SDJPYllCWi9lWHNTclhlMm45U3U5S3FOYjVhMjJnMWpFYWo4dTNZZTN1dGVyUHh5OW0xaWxIYk45WnVwL2NoVzZjaG01OXVIOW8zbU51QkhOSEh0NkZuWXo2M3kzM2lpWUNGTmxWUFdDTDBiWi9JSjdaUEtaOEVaRFkzODIySGhsbVREVmpvaW9EYVJFNVdQQ1k4bmtwM1ZqZ09yd1dXRDdjZGZFdDg2ZmNFYytGaFpYYUlPOGEyQ3N2MFF5OTA1ZEM4NVdDV2dhcGdrVEYycFhHS1BTS05Zby9RcXpoUUMvdkVkV2tHRDhuQXQ2elF6L0JXT25JSkRVWk9LQjVJeXZZUnB3SUdaSEswM2NQK0tDWWkvd1BrNHdGaGw0ODVJZjRWSmE0dG9iMGgxQThFL0tOQ0hEa2dEbkdiTFlZKzlnVjFGYy9iQTh5bjlEYUxvMFVNdno5bS9pMTJ5UzJDN0xrWS9ZQmRseXpoTTlmSFdWRm9rUFFyaVd3a0p5MmNoWnhOc3BBT2NDQVlKMWwxOGV5VVRiSHYwZ21lU1dpbElRdUlmNGxETDJQTWRpZjBmZXFQcGY4RERzeEpZTVB3Y3FZU1N1Z2xVMm5aTmlkT3lBTVI1NVJLbHdVTHV5bzdpKzZLUTByc2hKWXhENWlxbHVNUWZCTXZrN09ZOFpKMWd6MXFzMERwYlhYSDJPN1JjY2k0bEVEcEF0VEpwbFRCTFBXb0VJUW5CSHZCRks3Y21XUm5HNlI3VGJsVWIvRWdPUVJrTm5YcFNDYXYzSWxVRndBdlNybHRoMU5JWUJiSXdxc2ducTA0WUc0d21XbVJQMFpydVk0K1QxSjB6M1NoZjlyTlFvdGRQclBXYUFhaGQwbjRPRzRreDVSRDNtUml5cWNzR0lVMHVKMm80ajNCWXVURUpiREFZVDdTdDV6OHJubmNZQ1hTSkpMaU9UVEs5MWtzYnZVSVdaYUZuUVBNTHlsUnd0bUNiaSs5QVJMbWtkRkUzbHVzcEI0VGNUYXRLUlprb3F3b29yaHFNY2NUU203b1NNcHhSYXVPSk1ncEZwbDVlWGJBdk11STBoaDFJamR2c0h2N2dEeUJsb09BWXIzd1ZnNWF5R1VDV25xbEw3YWoyU1hoUmRPbGNSTW85TEh0U0E4bFMrQXBad0U2bGk1ZUNjRW1jVGZwazdFVGszeUJVWTh1blFpV28xdk1sV29LQXlLVXBEUW5lZk05bHJJdWRsR1BUR1ZJK1g3Y1dRc2RxR3kxQ3ppakV4TEk1YkJ3RWtLdlhJWURZc1UrZWlldEU4WVNMYWVUbUc5QWZZemFHVkZmNE9keG5NVzNvWmRRWGRKYktzeFZGR3pENGc2eXNyTVlnUjBQalhjeGZUcHlzT3JoMmNHV3V1VHFpcE1aR2lqZEN6SlZlNlh5dVVPWURjc1pPc255dTlQRzNBWDdRRTdmeFZOc0wyY2w3ZHAwb2RoOU8yN1ZLVzFzWGVDSDZVMjdrR1k3bllrRlloYnd3VlRrMmlFKzZpL3puRGY1clJJSkNJSEcvS1owYkxySllvRXloZTBrZWlNWjdSSWN0U0NDVE5YMTJHVmN4cVZ6NmpIaHpGQlg4VWw5cm9MdkVlYURDR0syVThvOWRHYytHc3JFM0djU1l0bjQ2UTVJbHdYLytXYzJiUW5DZDlwQUF3NlVLSGJ1eTM4NUxWRkxIek0rVXdFVitzeDExYmJldExIY0xSUzdER0pYVGZ3UUpsWHJ3akRLQ3dUV1V4ZkNJSUFsRDFtcUxQMUV1UldQb09renRZaEVIQzlOMmN1NGRnc2RQS1cySHV4bnF1dTcrZW9HT3VFcVNZbnAwbnI3clJJNWtsdldCN2xOZDgzMDlGa05GSHE5RUU0c3BmSVJiT000SFRHVng4VzJrR1NrR0hFWXE4NzBadWhRRGp1SkVocG5BaUowNDRxeVlKZkgxYzAwL1FPaTZqQ1ppaFNIMHN2T1lUZ21VQmVuMGo1M29QTUc2R2g1WGVVdk1GVTdqaUdESFl0UUlFb2RGbzVkR0NzdjdBeGdxWVV1OWxMUml6L1FXSWxKekdWWXZHSFhNSEdVWXkwNTVUc3A5cU0xWGs5UXVZc1c4ckJxemJ2cjhNdEtjTVVnUGE4SmhPbFZmRlBXeTZZc3prMVp3emxMZXQxOHBkMjc2QzFlMmxSWEJ2b0VjdkpjVngvWGtTZG44dVJFYzJlKzArN0pZYmxCZXhGbUF0MWJ6ZDBnRSsvbXNRNzhXQnV2Zyt1cUNhU2FjdWNuMmxTNXRtekptOTFGd1BIc3BoN0NSWFppRWtEZjZnUDdHaTlXUDlOaG5BWWR5K0NOQ2xVOWZxNUM3UzZHbGVzZGFKQVBoeHFHWEhkSkdETFlYRnVweU5SQTU0NDFzY1p4S0RpeWJlU0dQWFdtRW1RcTBjZ2lqbVdnNW55cGNmT2dYT1RhWFMwY2xaV2NxVWtxRVg0L2UrQ21Uc09SRGptdUNwVU5VeEZ4WXVsd0xFdWJZN0FZZjY2dHBqaVV6VGQzcm9nek5kQXh6eDExTm5pWkhZaDFwRkdSU0x1YXRydWkvZVFHdW9hV1BIV1ViRTdwVmtnNzVEcjY4RWQ4Z2RnVk1uMFNDSWNFbExsc1BOdEZKeXk0cGdLNzZJckJZblpOUmhUT3JUQjZEWWE3alZvREhlSkFvTDJLY0pBbDRDVlc3S0l6Y29NdUdKL0EyUVV5S3BXcWdWNWI1b3U1dzQyTTQ1Ky9CTWdiUW1GUDFDYzJIY0hsTnF6TFpFeWlhZHFNUng4WjBXdWZUZ2tQcUppbDhlMCtCRnJXOGQ5cHlFTnNTN1QzZUtSemlRdmVuUmx6WXdEUEI1d0Vsek5ZNnVCOVRFVUl0RmJudERaYkNWcGhNZU1jdGN4ZGRNQStJS051NkV3M0cvZnhJUHgrdkYrcDFMLzNpUDFpZEkvaUJiSERSOGI1cWVQUHYwcnE3cVgxUlFsY1BIcnBRTTVJeUtNWTdwT1hCcnlZMnpud1hXVFVLcFU3ak1pRTE0eVFaR2Zwa1NELzlXUnNQN1M4NTZMejFFZVQ0SHNuQ0Q1RGNIWTZwRmRjT093NndoZ0RYeDJXWHRKb1BIK3Z3SitKNWUrL2hwam5aMnVpYy9INGo4L3NVMHJMQ3RlcVJpVzcxQzRhZXVpb1dUTU9WelVtUHFsV0RPT1JqZW1QNlVBVTdYM2lNWDZYQ0JkZXBaK2ZrdWlMT1BYSHFJMzlFYnhJdEdFQTRXdnMvSXRINTB0RWsxbFE4VmRJNjVFS0VHbGNuZWlqdjVpRFVzbU5OWWw2MkllNkliRVNkT0xVR1F3VHhJNldKVUdDdTZpOTZQVUxyNHZUck9OZmhpUWdtSThjMUtGVENoejdUN0xFSUEvUFBwR0ZkMnRTd1pKdThIK2lSM244VXhyZmE3NUNrL2U3cHVpeHV3eFNuMlNSWlRUWFd0VHkrR01HMkVmSkttdlB0K1pOd3FlT1g3VHRmNWhBOEtNVThqZFoxSGNOL2pyNklxejhMdHNsNElkdkUvN3dWRzhKNmYrOVd2Q3hSK1Rma1FyemkvbEIvNlY4YTkxeFlZOTFCZzlKRzdDVHBFMmgwMEljNnM5aytPcUt1aFFMWUduUjF3am1rcjdreGJLTkJYNXh4YU1aMDQrWE9MdDVJZUY5QjcvY1QvRFB4NDhmUDhEaHY5SHZmd1pUeXhPbUt3QUEifQ== -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["PMID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["lastName"],"name":[2],"type":["chr"],"align":["left"]},{"label":["foreName"],"name":[3],"type":["chr"],"align":["left"]},{"label":["initials"],"name":[4],"type":["chr"],"align":["left"]},{"label":["affiliation"],"name":[5],"type":["chr"],"align":["left"]}],"data":[{"1":"23874253","2":"Kuo","3":"Cassie","4":"C","5":"Department of Anesthesiology, Hospital for Special Surgery, 535 East 70th Street, New York, NY 10021 USA."},{"1":"23874253","2":"Edwards","3":"Alison","4":"A","5":""},{"1":"23874253","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"23874253","2":"Memtsoudis","3":"Stavros G","4":"SG","5":""},{"1":"23194934","2":"Stundner","3":"Ottokar","4":"O","5":"Department of Anesthesiology, Hospital for Special Surgery, Weill Medical College of Cornell University, New York, NY, USA."},{"1":"23194934","2":"Kirksey","3":"Meghan","4":"M","5":""},{"1":"23194934","2":"Chiu","3":"Ya Lin","4":"YL","5":""},{"1":"23194934","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"23194934","2":"Poultsides","3":"Lazaros","4":"L","5":""},{"1":"23194934","2":"Gerner","3":"Peter","4":"P","5":""},{"1":"23194934","2":"Memtsoudis","3":"Stavros G","4":"SG","5":""},{"1":"23091119","2":"Gupta","3":"Ajay","4":"A","5":"Department of Radiology, Weill Cornell Medical School, New York-Presbyterian Hospital, 525 East 68th Street, Starr 8A, Box 141, New York, NY 10065, USA. ajg9004@med.cornell.edu"},{"1":"23091119","2":"Chazen","3":"J Levi","4":"JL","5":""},{"1":"23091119","2":"Hartman","3":"Maya","4":"M","5":""},{"1":"23091119","2":"Delgado","3":"Diana","4":"D","5":""},{"1":"23091119","2":"Anumula","3":"Nikesh","4":"N","5":""},{"1":"23091119","2":"Shao","3":"Huibo","4":"H","5":""},{"1":"23091119","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"23091119","2":"Segal","3":"Alan Z","4":"AZ","5":""},{"1":"23091119","2":"Kamel","3":"Hooman","4":"H","5":""},{"1":"23091119","2":"Leifer","3":"Dana","4":"D","5":""},{"1":"23091119","2":"Sanelli","3":"Pina C","4":"PC","5":""},{"1":"23080348","2":"Stundner","3":"Ottokar","4":"O","5":"Department of Anesthesiology, Hospital for Special Surgery, Weill Medical College of Cornell University, New York, NY 10021, USA."},{"1":"23080348","2":"Chiu","3":"Ya-Lin","4":"YL","5":""},{"1":"23080348","2":"Sun","3":"Xuming","4":"X","5":""},{"1":"23080348","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"23080348","2":"Fleischut","3":"Peter","4":"P","5":""},{"1":"23080348","2":"Poultsides","3":"Lazaros","4":"L","5":""},{"1":"23080348","2":"Gerner","3":"Peter","4":"P","5":""},{"1":"23080348","2":"Fritsch","3":"Gerhard","4":"G","5":""},{"1":"23080348","2":"Memtsoudis","3":"Stavros G","4":"SG","5":""},{"1":"23068970","2":"Lancman","3":"Guido","4":"G","5":"Department of Neurological Surgery, Weill Cornell Medical College, 1300 York Avenue, New York, NY 10065, USA."},{"1":"23068970","2":"Virk","3":"Michael","4":"M","5":""},{"1":"23068970","2":"Shao","3":"Huibo","4":"H","5":""},{"1":"23068970","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"23068970","2":"Greenfield","3":"Jeffrey P","4":"JP","5":""},{"1":"23068970","2":"Weinstein","3":"Steven","4":"S","5":""},{"1":"23068970","2":"Schwartz","3":"Theodore H","4":"TH","5":""},{"1":"23008025","2":"Memtsoudis","3":"Stavros G","4":"SG","5":"Department of Anesthesiology, Hospital for Special Surgery, Weill Medical College of Cornell University, 535 East 70th Street, New York, NY 10021, USA. memtsoudiss@hss.edu"},{"1":"23008025","2":"Mantilla","3":"Carlos B","4":"CB","5":""},{"1":"23008025","2":"Parvizi","3":"Javad","4":"J","5":""},{"1":"23008025","2":"Stundner","3":"Ottokar","4":"O","5":""},{"1":"23008025","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22677144","2":"Gonzalez Della Valle","3":"Alejandro","4":"A","5":"Department of Orthopedic Surgery, Hospital for Special Surgery, New York, NY, USA. gonzaleza@hss.edu"},{"1":"22677144","2":"Chiu","3":"Ya Lin","4":"YL","5":""},{"1":"22677144","2":"Ma","3":"Yan","4":"Y","5":""},{"1":"22677144","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22677144","2":"Memtsoudis","3":"Stavros G","4":"SG","5":""},{"1":"22634871","2":"Memtsoudis","3":"Stavros G","4":"SG","5":"Department of Anesthesiology, Hospital for Special Surgery, Weill Medical College of Cornell University, New York, New York 10021, USA. memtsoudiss@hss.edu"},{"1":"22634871","2":"Sun","3":"Xuming","4":"X","5":""},{"1":"22634871","2":"Chiu","3":"Ya-Lin","4":"YL","5":""},{"1":"22634871","2":"Nurok","3":"Michael","4":"M","5":""},{"1":"22634871","2":"Stundner","3":"Ottokar","4":"O","5":""},{"1":"22634871","2":"Pastores","3":"Stephen M","4":"SM","5":""},{"1":"22634871","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22434554","2":"Kovanlikaya","3":"Arzu","4":"A","5":"Department of Radiology, Weill Cornell Medical College, New York Presbyterian Hospital, 525 E 68th St, Rm F631E, New York, NY 10065, USA. ark2011@med.cornell.edu"},{"1":"22434554","2":"Rosenbaum","3":"Daniel","4":"D","5":""},{"1":"22434554","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22434554","2":"Dunning","3":"Allison","4":"A","5":""},{"1":"22434554","2":"Brill","3":"Paula W","4":"PW","5":""},{"1":"22426260","2":"Ruby","3":"Jeannine A","4":"JA","5":"Department of Surgery, Memorial Sloan-Kettering Cancer Center, New York, NY, USA."},{"1":"22426260","2":"Leibold","3":"Tobias","4":"T","5":""},{"1":"22426260","2":"Akhurst","3":"Timothy J","4":"TJ","5":""},{"1":"22426260","2":"Shia","3":"Jinru","4":"J","5":""},{"1":"22426260","2":"Saltz","3":"Leonard B","4":"LB","5":""},{"1":"22426260","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22426260","2":"Riedel","3":"Elyn R","4":"ER","5":""},{"1":"22426260","2":"Larson","3":"Steven M","4":"SM","5":""},{"1":"22426260","2":"Guillem","3":"José G","4":"JG","5":""},{"1":"22305625","2":"Memtsoudis","3":"Stavros G","4":"SG","5":"Department of Anesthesiology, Hospital for Special Surgery, New York, NY 10021, USA. MemtsoudisS@hss.edu"},{"1":"22305625","2":"Ma","3":"Yan","4":"Y","5":""},{"1":"22305625","2":"Swamidoss","3":"Cephas P","4":"CP","5":""},{"1":"22305625","2":"Edwards","3":"Alison M","4":"AM","5":""},{"1":"22305625","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22305625","2":"Liguori","3":"Gregory A","4":"GA","5":""},{"1":"22235286","2":"Yancovitz","3":"Molly","4":"M","5":"Department of Dermatology, New York University Langone Medical Center, New York, New York, United States of America."},{"1":"22235286","2":"Litterman","3":"Adam","4":"A","5":""},{"1":"22235286","2":"Yoon","3":"Joanne","4":"J","5":""},{"1":"22235286","2":"Ng","3":"Elise","4":"E","5":""},{"1":"22235286","2":"Shapiro","3":"Richard L","4":"RL","5":""},{"1":"22235286","2":"Berman","3":"Russell S","4":"RS","5":""},{"1":"22235286","2":"Pavlick","3":"Anna C","4":"AC","5":""},{"1":"22235286","2":"Darvishian","3":"Farbod","4":"F","5":""},{"1":"22235286","2":"Christos","3":"Paul","4":"P","5":""},{"1":"22235286","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22235286","2":"Osman","3":"Iman","4":"I","5":""},{"1":"22235286","2":"Polsky","3":"David","4":"D","5":""},{"1":"22189576","2":"Ma","3":"Yan","4":"Y","5":"Research Division, Hospital for Special Surgery, Weill Medical College of Cornell University, New York, NY 10021, USA. may@hss.edu"},{"1":"22189576","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22189576","2":"Memtsoudis","3":"Stavros G","4":"SG","5":""},{"1":"22115762","2":"Memtsoudis","3":"Stavros G","4":"SG","5":"Department of Anesthesiology, Hospital for Special Surgery, New York, New York 10021, USA."},{"1":"22115762","2":"Dy","3":"Christopher J","4":"CJ","5":""},{"1":"22115762","2":"Ma","3":"Yan","4":"Y","5":""},{"1":"22115762","2":"Chiu","3":"Ya-Lin","4":"YL","5":""},{"1":"22115762","2":"Della Valle","3":"Alejandro Gonzalez","4":"AG","5":""},{"1":"22115762","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22024892","2":"Memtsoudis","3":"Stavros G","4":"SG","5":"Department of Anesthesiology, Hospital for Special Surgery, New York, NY 10021, USA. MemtsoudisS@hss.edu"},{"1":"22024892","2":"Kirksey","3":"Meghan","4":"M","5":""},{"1":"22024892","2":"Ma","3":"Yan","4":"Y","5":""},{"1":"22024892","2":"Chiu","3":"Ya Lin","4":"YL","5":""},{"1":"22024892","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22024892","2":"Pumberger","3":"Matthias","4":"M","5":""},{"1":"22024892","2":"Girardi","3":"Federico P","4":"FP","5":""},{"1":"22020835","2":"Koscuiszka","3":"Michael","4":"M","5":"Department of Urology, New York University School of Medicine, New York, New York 10016, USA."},{"1":"22020835","2":"Hatcher","3":"David","4":"D","5":""},{"1":"22020835","2":"Christos","3":"Paul J","4":"PJ","5":""},{"1":"22020835","2":"Rose","3":"Amy E","4":"AE","5":""},{"1":"22020835","2":"Greenwald","3":"Holly S","4":"HS","5":""},{"1":"22020835","2":"Chiu","3":"Ya-lin","4":"YL","5":""},{"1":"22020835","2":"Taneja","3":"Samir S","4":"SS","5":""},{"1":"22020835","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"22020835","2":"Lee","3":"Peng","4":"P","5":""},{"1":"22020835","2":"Osman","3":"Iman","4":"I","5":""},{"1":"21851550","2":"Barbieri","3":"Christopher E","4":"CE","5":"Department of Urology, Weill Medical College of Cornell University, New York-Presbyterian Hospital, New York, NY 10065, USA."},{"1":"21851550","2":"Cha","3":"Eugene K","4":"EK","5":""},{"1":"21851550","2":"Chromecki","3":"Thomas F","4":"TF","5":""},{"1":"21851550","2":"Dunning","3":"Allison","4":"A","5":""},{"1":"21851550","2":"Lotan","3":"Yair","4":"Y","5":""},{"1":"21851550","2":"Svatek","3":"Robert S","4":"RS","5":""},{"1":"21851550","2":"Scherr","3":"Douglas S","4":"DS","5":""},{"1":"21851550","2":"Karakiewicz","3":"Pierre I","4":"PI","5":""},{"1":"21851550","2":"Sun","3":"Maxine","4":"M","5":""},{"1":"21851550","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"21851550","2":"Shariat","3":"Shahrokh F","4":"SF","5":""},{"1":"21778465","2":"Memtsoudis","3":"Stavros G","4":"SG","5":"Department of Anesthesiology, Hospital for Special Surgery, New York, NY 10021, USA. MemtsoudisS@hass.edu"},{"1":"21778465","2":"Bombardieri","3":"Anna Maria","4":"AM","5":""},{"1":"21778465","2":"Ma","3":"Yan","4":"Y","5":""},{"1":"21778465","2":"Walz","3":"J Matthias","4":"JM","5":""},{"1":"21778465","2":"Chiu","3":"Ya Lin","4":"YL","5":""},{"1":"21778465","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"21301391","2":"Passias","3":"Peter G","4":"PG","5":"Division of Spine Surgery, Department of Orthopaedic Surgery, Hospital for Special Surgery/Weill Medical College of Cornell University, New York, NY, USA."},{"1":"21301391","2":"Ma","3":"Yan","4":"Y","5":""},{"1":"21301391","2":"Chiu","3":"Ya Lin","4":"YL","5":""},{"1":"21301391","2":"Mazumdar","3":"Madhu","4":"M","5":""},{"1":"21301391","2":"Girardi","3":"Federico P","4":"FP","5":""},{"1":"21301391","2":"Memtsoudis","3":"Stavros G","4":"SG","5":""}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>PMID , PMID ,</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5JTlNFUlQgSU5UTyBBdXRob3IgKCBsYXN0TmFtZSwgZm9yZU5hbWUsIGluaXRpYWxzLGFmZmlsaWF0aW9uKVxuU0VMRUNUICAgbGFzdE5hbWUsIGZvcmVOYW1lLCBpbml0aWFscyxhZmZpbGlhdGlvblxuRlJPTSBhdXRob3JEYXRhXG5cblxuYGBgIn0= -->
+<pre class="sql"><code>INSERT INTO Author ( lastName, foreName, initials,affiliation)
+SELECT   lastName, foreName, initials,affiliation
+FROM authorData
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCBkaXN0aW5jdCAqIGZyb20gQXV0aG9yIGxpbWl0IDVcbmBgYCJ9 -->
+<pre class="sql"><code>
+SELECT distinct * from Author limit 5</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Initials is not included in the keys for Authorship because it dosent impact the results. 84 unique first and last name pairs, and 84 first, last and initial pairs.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5JTlNFUlQgSU5UTyBBdXRob3JzaGlwICggUE1JRCwgbGFzdE5hbWUsIGZvcmVOYW1lKVxuU0VMRUNUICAgUE1JRCwgbGFzdE5hbWUsIGZvcmVOYW1lXG5GUk9NIGF1dGhvckRhdGFcblxuXG5gYGAifQ== -->
+<pre class="sql"><code>INSERT INTO Authorship ( PMID, lastName, foreName)
+SELECT   PMID, lastName, foreName
+FROM authorData
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCAqIGZyb20gQXV0aG9yc2hpcCBsaW1pdCA1XG5gYGAifQ== -->
+<pre class="sql"><code>
+SELECT * from Authorship limit 5</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUEyVlEyMHJEUUJDZEpydHFBb0xnRC9nRDlrVVFYOFdxYUlrVnE5RFh3ZDFpYUpLVnZWajF5Ui8wVS93Q3dUaEpkNFRXaDdNN1orYk1tZG05RzgyTzhsa09BQ2tJUWlvcEJQbHdmM0Y0QWlBU0lnTXFaTjM5U3FKOUNnUmh0MVAxUllDazcxN2xKZGNHMWZYbkd2RHJtUEo3dldabG1JNkRpZUgydVZxaVZTN1NuUUxmUTYzUVJwNFh1dmJPQkZYK0thWStOS3JSZHNOejZ3eWRLeld6MDZwMHBvbE1GcWllUWlUWjFPT0xOZTdna2xlWWVHOFdOSEw5MWJMQldyczRSWEJ6WmN3aVBJLzFXMHlJMitKcXhLdFY2UHdOZFRHZkc2dDd2dUg4U0VKMjVtU3UwT053YnYvTE0ydVdRMTZtKytMa2c0NjJiYi9wK3Vud0MyNGZNZkRNQVFBQSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["lookupKey"],"name":[1],"type":["int"],"align":["right"]},{"label":["PMID"],"name":[2],"type":["int"],"align":["right"]},{"label":["lastName"],"name":[3],"type":["chr"],"align":["left"]},{"label":["foreName"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"23874253","3":"Kuo","4":"Cassie"},{"1":"2","2":"23874253","3":"Edwards","4":"Alison"},{"1":"3","2":"23874253","3":"Mazumdar","4":"Madhu"},{"1":"4","2":"23874253","3":"Memtsoudis","4":"Stavros G"},{"1":"5","2":"23194934","3":"Stundner","4":"Ottokar"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5EUk9QIFRBQkxFIGF1dGhvckRhdGFcbmBgYCJ9 -->
+<pre class="sql"><code>DROP TABLE authorData</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="part-2" class="section level3">
+<h3>Part 2</h3>
+</div>
+<div id="creae-new-and-db-star-schema" class="section level2">
+<h2>Creae new and db Star schema</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHViIDwtIGRiQ29ubmVjdChSU1FMaXRlOjpTUUxpdGUoKSwgXCJwdWJNZWRTdGFyLmRiXCIpXG5gYGAifQ== -->
+<pre class="r"><code>pub &lt;- dbConnect(RSQLite::SQLite(), &quot;pubMedStar.db&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbi0tdXNlIHRvIGNsZWFyIHRhYmxlc1xuRFJPUCBUQUJMRSBJRiBFWElTVFMgYXV0aG9yO1wiKVxuRFJPUCBUQUJMRSBJRiBFWElTVFMgYXV0aG9yQXJ0aWNsZTtcIilcbkRST1AgVEFCTEUgSUYgRVhJU1RTIGFydGljbGU7XCIpXG5EUk9QIFRBQkxFIElGIEVYSVNUUyBhcnRpY2xlSm91cm5hbDtcIilcbkRST1AgVEFCTEUgSUYgRVhJU1RTIGhpc3Rvcnk7XG5cbmBgYCJ9 -->
+<pre class="sql"><code>
+--use to clear tables
+DROP TABLE IF EXISTS author;&quot;)
+DROP TABLE IF EXISTS authorArticle;&quot;)
+DROP TABLE IF EXISTS article;&quot;)
+DROP TABLE IF EXISTS articleJournal;&quot;)
+DROP TABLE IF EXISTS history;
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cblNFTEVDVCAgKiBmcm9tIEhpc3RvcnlcbmBgYCJ9 -->
+<pre class="sql"><code>
+SELECT  * from History</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6W10sInJkZiI6Ikg0c0lBQUFBQUFBQUE5Mld6V29UVVJUSEovUFJUQ2FXNXFQV3BsTEVyZEF1Rk1RSHFLSmlJYVpWV3dYMW10elNRTDZZVEZycnlqZHdJOFdGdVBBRkJOZStnaytRMW8xclg4Q0Y4Vjc4bitUME1rTlR0RVpjL0pKejdqbjNmTjFKNWxaV05xNEVHNEZsV1k3bEtoeFBpWlozYi8zRzBqWExjbTJscEpRaG83K2ZLNmVpdGlxbUZZOVRqZHVmWXhIZnJpYnk5TUdIRVV0dlI2UXVKZktrV0lybDRkU2JXRGJGN3BEN2xlL0pYSDQ5WlAzUlppSnJOL2RqcWV6N1ErNzJQc1pTTG53YVlYOU5aTFg1N2doM3loZVBjTjEvUmFqWjUvVDhjVEIrS0t1eXZpTnJwSXRxVlhhaWtTNDd2V2VOZW5jYitwUnNSYUY4UVpveU5vZSthU1UyNmkyWkVEb2R5cDE2TnpIVEdiRXRSYTI5MVFucnJlamsyVTdIOWUvMmNOeGgvTnZoLzJBbHhwZ25WOWhrei9zM2Zuei94V054dXRPZjdQYXhYUEd1VkNzSGpFUEdRUUpmRFA4NDJTVEpwdGY3eC9pZkpHNmZZZnFPczk2UDRYQU1uemlicVJ0eGFQN3FJcU51TlBxZzlQRVkrQ0NybndxZy9RUEFaUmRrUU1EUXNXeG1JenpFcC95RXgwZ2pqdzBjUm9ySkh2WlNicHRCdldTeGgvQllYMVJqQUw4czg2YytNc2poeC9Ub0c3akdMSGtQQVp2L2pQWHIzaktyT01mUWEzbXNuMmMxYS85NTRNSSt5MlphVU15aHB6eHdrRS9YVVZJc2dFWFlzNWdGeGNqRHRnaTl4UEtmUmZ3NTlFbjVQZXliUm03ZS93TDJsbEFMelh5RzlYc0JlaG82MWVndzJjY3N0RnhFTFNXUVErOVV6enpzRkwvQStzc1psM2l2SlpxeWl5QWVGdDN5NnEwVnlCbjFMN1lXaWFqWEplT2VGQ0h0YnJaYkViM0puSnJZTTZOWEc2SkwwV2t4cUlsSUxHK0ZLckhobmduYnU4dFVrSjZtL1ZKOURBYUQ5K3JyaCtZbkhXY2FVNThNQUFBPSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["PMID"],"name":[1],"type":["int"],"align":["right"]},{"label":["pubStatus"],"name":[2],"type":["chr"],"align":["left"]},{"label":["year"],"name":[3],"type":["int"],"align":["right"]},{"label":["month"],"name":[4],"type":["int"],"align":["right"]},{"label":["day"],"name":[5],"type":["int"],"align":["right"]}],"data":[{"1":"23874253","2":"received","3":"2012","4":"1","5":"15"},{"1":"23874253","2":"accepted","3":"2012","4":"4","5":"16"},{"1":"23874253","2":"epublish","3":"2012","4":"6","5":"20"},{"1":"23874253","2":"entrez","3":"2013","4":"7","5":"23"},{"1":"23874253","2":"pubmed","3":"2013","4":"7","5":"23"},{"1":"23874253","2":"medline","3":"2013","4":"7","5":"23"},{"1":"23194934","2":"received","3":"2012","4":"7","5":"16"},{"1":"23194934","2":"revised","3":"2012","4":"8","5":"17"},{"1":"23194934","2":"accepted","3":"2012","4":"8","5":"20"},{"1":"23194934","2":"aheadofprint","3":"2012","4":"11","5":"27"},{"1":"23194934","2":"entrez","3":"2012","4":"12","5":"1"},{"1":"23194934","2":"pubmed","3":"2012","4":"12","5":"1"},{"1":"23194934","2":"medline","3":"2014","4":"1","5":"15"},{"1":"23091119","2":"entrez","3":"2012","4":"10","5":"24"},{"1":"23091119","2":"pubmed","3":"2012","4":"10","5":"24"},{"1":"23091119","2":"medline","3":"2013","4":"1","5":"4"},{"1":"23080348","2":"entrez","3":"2012","4":"10","5":"20"},{"1":"23080348","2":"pubmed","3":"2012","4":"10","5":"20"},{"1":"23080348","2":"medline","3":"2013","4":"4","5":"9"},{"1":"23068970","2":"received","3":"2012","4":"4","5":"9"},{"1":"23068970","2":"revised","3":"2012","4":"9","5":"18"},{"1":"23068970","2":"accepted","3":"2012","4":"9","5":"22"},{"1":"23068970","2":"aheadofprint","3":"2012","4":"10","5":"12"},{"1":"23068970","2":"entrez","3":"2012","4":"10","5":"17"},{"1":"23068970","2":"pubmed","3":"2012","4":"10","5":"17"},{"1":"23068970","2":"medline","3":"2013","4":"7","5":"3"},{"1":"23008025","2":"received","3":"2012","4":"2","5":"13"},{"1":"23008025","2":"accepted","3":"2012","4":"9","5":"7"},{"1":"23008025","2":"aheadofprint","3":"2012","4":"9","5":"25"},{"1":"23008025","2":"entrez","3":"2012","4":"9","5":"26"},{"1":"23008025","2":"pubmed","3":"2012","4":"9","5":"26"},{"1":"23008025","2":"medline","3":"2013","4":"5","5":"29"},{"1":"22677144","2":"received","3":"2011","4":"8","5":"17"},{"1":"22677144","2":"accepted","3":"2012","4":"4","5":"11"},{"1":"22677144","2":"aheadofprint","3":"2012","4":"6","5":"5"},{"1":"22677144","2":"entrez","3":"2012","4":"6","5":"9"},{"1":"22677144","2":"pubmed","3":"2012","4":"6","5":"9"},{"1":"22677144","2":"medline","3":"2013","4":"5","5":"17"},{"1":"22634871","2":"entrez","3":"2012","4":"5","5":"29"},{"1":"22634871","2":"pubmed","3":"2012","4":"5","5":"29"},{"1":"22634871","2":"medline","3":"2013","4":"7","5":"9"},{"1":"22434554","2":"received","3":"2012","4":"1","5":"25"},{"1":"22434554","2":"accepted","3":"2012","4":"2","5":"1"},{"1":"22434554","2":"revised","3":"2012","4":"2","5":"1"},{"1":"22434554","2":"aheadofprint","3":"2012","4":"3","5":"21"},{"1":"22434554","2":"entrez","3":"2012","4":"3","5":"22"},{"1":"22434554","2":"pubmed","3":"2012","4":"3","5":"22"},{"1":"22434554","2":"medline","3":"2013","4":"1","5":"8"},{"1":"22426260","2":"entrez","3":"2012","4":"3","5":"20"},{"1":"22426260","2":"pubmed","3":"2012","4":"3","5":"20"},{"1":"22426260","2":"medline","3":"2012","4":"5","5":"5"},{"1":"22305625","2":"received","3":"2011","4":"6","5":"17"},{"1":"22305625","2":"revised","3":"2011","4":"9","5":"13"},{"1":"22305625","2":"accepted","3":"2011","4":"10","5":"12"},{"1":"22305625","2":"aheadofprint","3":"2012","4":"2","5":"4"},{"1":"22305625","2":"entrez","3":"2012","4":"2","5":"7"},{"1":"22305625","2":"pubmed","3":"2012","4":"2","5":"7"},{"1":"22305625","2":"medline","3":"2012","4":"7","5":"26"},{"1":"22235286","2":"received","3":"2011","4":"8","5":"1"},{"1":"22235286","2":"accepted","3":"2011","4":"11","5":"25"},{"1":"22235286","2":"epublish","3":"2012","4":"1","5":"3"},{"1":"22235286","2":"entrez","3":"2012","4":"1","5":"12"},{"1":"22235286","2":"pubmed","3":"2012","4":"1","5":"12"},{"1":"22235286","2":"medline","3":"2012","4":"5","5":"15"},{"1":"22189576","2":"entrez","3":"2011","4":"12","5":"23"},{"1":"22189576","2":"pubmed","3":"2011","4":"12","5":"23"},{"1":"22189576","2":"medline","3":"2012","4":"7","5":"31"},{"1":"22115762","2":"received","3":"2011","4":"2","5":"15"},{"1":"22115762","2":"accepted","3":"2011","4":"10","5":"7"},{"1":"22115762","2":"aheadofprint","3":"2011","4":"11","5":"23"},{"1":"22115762","2":"entrez","3":"2011","4":"11","5":"26"},{"1":"22115762","2":"pubmed","3":"2011","4":"11","5":"26"},{"1":"22115762","2":"medline","3":"2013","4":"1","5":"3"},{"1":"22024892","2":"entrez","3":"2011","4":"10","5":"26"},{"1":"22024892","2":"pubmed","3":"2011","4":"10","5":"26"},{"1":"22024892","2":"medline","3":"2012","4":"9","5":"8"},{"1":"22020835","2":"received","3":"2011","4":"6","5":"27"},{"1":"22020835","2":"revised","3":"2011","4":"8","5":"26"},{"1":"22020835","2":"accepted","3":"2011","4":"9","5":"19"},{"1":"22020835","2":"aheadofprint","3":"2011","4":"10","5":"21"},{"1":"22020835","2":"entrez","3":"2011","4":"10","5":"25"},{"1":"22020835","2":"pubmed","3":"2011","4":"10","5":"25"},{"1":"22020835","2":"medline","3":"2012","4":"8","5":"16"},{"1":"21851550","2":"aheadofprint","3":"2011","4":"8","5":"18"},{"1":"21851550","2":"entrez","3":"2011","4":"8","5":"20"},{"1":"21851550","2":"pubmed","3":"2011","4":"8","5":"20"},{"1":"21851550","2":"medline","3":"2012","4":"4","5":"24"},{"1":"21778465","2":"aheadofprint","3":"2011","4":"7","5":"21"},{"1":"21778465","2":"entrez","3":"2011","4":"7","5":"23"},{"1":"21778465","2":"pubmed","3":"2011","4":"7","5":"23"},{"1":"21778465","2":"medline","3":"2013","4":"1","5":"18"},{"1":"21301391","2":"entrez","3":"2011","4":"2","5":"9"},{"1":"21301391","2":"pubmed","3":"2011","4":"2","5":"9"},{"1":"21301391","2":"medline","3":"2012","4":"10","5":"16"}],"options":{"columns":{"min":{},"max":[10],"total":{}},"rows":{"min":[10],"max":[10],"total":{}},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBoaXN0b3J5RGltZW5zaW9uIChoaXN0b3J5RGltSUQgSU5URUdFUiBQUklNQVJZIEtFWSBhdXRvaW5jcmVtZW50LCBcbiAgaGlzdG9yeURpbUlkIElOVEVHRVIsXG4gIHB1YlN0YXR1cyBURVhULFxuICBoaXN0b3J5RGF0ZSBURVhULFxuICBoaXN0b3J5VGltZSBURVhULFxuICBoaXN0b3J5TW9udGggSU5URUdFUixcbiAgaGlzdG9yeURheSBJTlRFR0VSLFxuICBoaXN0b3J5UXVhcnRlciBJTlRFR0VSKTtcblxuYGBgIn0= -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS historyDimension (historyDimID INTEGER PRIMARY KEY autoincrement, 
+  historyDimId INTEGER,
+  pubStatus TEXT,
+  historyDate TEXT,
+  historyTime TEXT,
+  historyMonth INTEGER,
+  historyDay INTEGER,
+  historyQuarter INTEGER);
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="using-original-table-to-get" class="section level2">
+<h2>Using original table to get</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbklOU0VSVCBJTlRPIGhpc3RvcnlEaW1lbnNpb24oaGlzdG9yeURpbUlkLCBwdWJTdGF0dXMsIGhpc3RvcnlEYXRlLCBoaXN0b3J5VGltZSwgaGlzdG9yeU1vbnRoLCBoaXN0b3J5RGF5LCBoaXN0b3J5UXVhcnRlcilcblNFTEVDVCBIaXN0b3J5LlBNSUQgQVMgaGlzdG9yeURpbUlkLFxuIEhpc3RvcnkucHViU3RhdHVzIEFTIHB1YlN0YXR1cyxcbiBIaXN0b3J5Lm1vbnRoIHx8IFwiLVwiIHx8IEhpc3RvcnkuZGF5IHx8IFwiLVwiIHx8IEhpc3RvcnkueWVhciBBUyBkYXRlLFxuIEhpc3RvcnkubW9udGggYXMgaGlzdG9yeU1vbnRoLFxuIEhpc3RvcnkuZGF5IGFzIGhpc3RvcnlEYXksXG4gIENBU0VcbiAgICBXSEVOIEhpc3RvcnkubW9udGggQkVUV0VFTiAxIEFORCAzIFRIRU4gMVxuICAgIFdIRU4gSGlzdG9yeS5tb250aCBCRVRXRUVOIDQgQU5EIDYgVEhFTiAyXG4gICAgV0hFTiBIaXN0b3J5Lm1vbnRoIEJFVFdFRU4gNyBBTkQgOSBUSEVOIDNcbiAgICBXSEVOIEhpc3RvcnkubW9udGggQmV0d2VlbiAxMCBBTkQgMTIgVEhFTiA0XG4gIEVORFxuICBGUk9NIEhpc3RvcnlcblxuYGBgIn0= -->
+<pre class="sql"><code>
+INSERT INTO historyDimension(historyDimId, pubStatus, historyDate, historyTime, historyMonth, historyDay, historyQuarter)
+SELECT History.PMID AS historyDimId,
+ History.pubStatus AS pubStatus,
+ History.month || &quot;-&quot; || History.day || &quot;-&quot; || History.year AS date,
+ History.month as historyMonth,
+ History.day as historyDay,
+  CASE
+    WHEN History.month BETWEEN 1 AND 3 THEN 1
+    WHEN History.month BETWEEN 4 AND 6 THEN 2
+    WHEN History.month BETWEEN 7 AND 9 THEN 3
+    WHEN History.month Between 10 AND 12 THEN 4
+  END
+  FROM History
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIGFydGljbGUoXG4gICAgICAgICAgICAgICAgcG1JRCBJTlQgTk9UIE5VTEwsIFxuICAgICAgICAgICAgICAgIGRhdGVUaW1lSUQgSU5UIE5vdCBOVUxMLCBcbiAgICAgICAgICAgICAgICBhdXRob3JJRCBJTlQgTk9UIE5VTEwsXG4gICAgICAgICAgICAgICAgcHViSm91cm5hbElEIElOVCxcbiAgICAgICAgICAgICAgICBGT1JFSUdOIEtFWSAoZGF0ZVRpbWVJRCkgcmVmZXJlbmNlcyBkYXRlVGltZShkYXRlVGltZUlEKSBcbiAgICAgICAgICAgICAgICBGT1JFSUdOIEtFWSAoYXV0aG9ySUQpIHJlZmVyZW5jZXMgYXV0aG9yKGF1dGhvcklEKSBcbiAgICAgICAgICAgICAgICBGT1JFSUdOIEtFWSAocHViSm91cm5hbElEKSByZWZlcmVuY2VzIGpvdXJuYWwoam91cm5hbElEKVxuICAgICAgICAgICAgICAgIEZPUkVJR04gS0VZIChwbUlELCBhdXRob3JJRCkpO1xuYGBgIn0= -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS article(
+                pmID INT NOT NULL, 
+                dateTimeID INT Not NULL, 
+                authorID INT NOT NULL,
+                pubJournalID INT,
+                FOREIGN KEY (dateTimeID) references dateTime(dateTimeID) 
+                FOREIGN KEY (authorID) references author(authorID) 
+                FOREIGN KEY (pubJournalID) references journal(journalID)
+                FOREIGN KEY (pmID, authorID));</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5DUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBhcnRpY2xlRGF0YShcbiAgICAgICAgICAgICAgICBwbUlEIElOVCBub3QgbnVsbCwgXG4gICAgICAgICAgICAgICAgZG9pIFRFWFQgTlVMTCxcbiAgICAgICAgICAgICAgICBhYnN0cmFjdCBURVhUIE5VTEwsIFxuICAgICAgICAgICAgICAgIGFydGljbGVUaXRsZSBURVhUIE5VTEwsIFxuICAgICAgICAgICAgICAgIHB1Yk1vZGVsIFRFWFQgbnVsbCwgXG4gICAgICAgICAgICAgICAgcHViWWVhciBURVhUIG51bGwsIFxuICAgICAgICAgICAgICAgIHB1Yk1vbnRoIFRFWFQgbnVsbCxcbiAgICAgICAgICAgICAgICBwcmltYXJ5IGtleSAocG1JRCkpO1xuXG5gYGAifQ== -->
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS articleData(
+                pmID INT not null, 
+                doi TEXT NULL,
+                abstract TEXT NULL, 
+                articleTitle TEXT NULL, 
+                pubModel TEXT null, 
+                pubYear TEXT null, 
+                pubMonth TEXT null,
+                primary key (pmID));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIGF1dGhvcihcbiAgICAgICAgICAgICAgICBhdXRob3JJZCBOT1QgTlVMTCwgXG4gICAgICAgICAgICAgICAgbGFzdE5hbWUgVEVYVCBOVUxMLCBcbiAgICAgICAgICAgICAgICBmb3JlTmFtZSBUZXh0IE5VTEwsIFxuICAgICAgICAgICAgICAgIGFmZmlsaWF0aW9uIHRleHQgTlVMTCwgXG4gICAgICAgICAgICAgICAgUFJJTUFSWSBLRVkoYXV0aG9ySUQpKTtcblxuYGBgIn0= -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS author(
+                authorId NOT NULL, 
+                lastName TEXT NULL, 
+                foreName Text NULL, 
+                affiliation text NULL, 
+                PRIMARY KEY(authorID));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIGFydGljbGVKb3VybmFsKFxuICAgICAgICAgICAgICAgIGpvdXJuYWxJRCBJTlQgbm90IG51bGwgUFJJTUFSWSBLRVksXG4gICAgICAgICAgICAgICAgdm9sdW1lIElOVCBudWxsLCBcbiAgICAgICAgICAgICAgICBpc3N1ZSBJTlQgbnVsbCwgXG4gICAgICAgICAgICAgICAgbWVkTGluZVBHTiBJTlQgTlVMTCk7XG5cbmBgYCJ9 -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS articleJournal(
+                journalID INT not null PRIMARY KEY,
+                volume INT null, 
+                issue INT null, 
+                medLinePGN INT NULL);
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbmNyZWF0ZSB0YWJsZSBpZiBub3QgZXhpc3RzIGpvdXJuYWxJbmZvKFxuICAgICAgICAgICAgICAgIGpvdXJuYWxJZCBJTlQgTk9UIE5VTEwsXG4gICAgICAgICAgICAgICAgaXNzbiBURVhUIG5vdCBudWxsLFxuICAgICAgICAgICAgICAgIGlzc25UeXBlIFRFWFQgTlVMTCxcbiAgICAgICAgICAgICAgICBqb3VybmFsIHRleHQgTlVMTCwgXG4gICAgICAgICAgICAgICAgcHJpbWFyeSBrZXkgKGpvdXJuYWxJZCkpO1xuXG5gYGAifQ== -->
+<pre class="sql"><code>
+create table if not exists journalInfo(
+                journalId INT NOT NULL,
+                issn TEXT not null,
+                issnType TEXT NULL,
+                journal text NULL, 
+                primary key (journalId));
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIGRhdGVUaW1lKFxuICAgICAgICAgICAgICAgIGRhdGVUaW1lSUQgSU5URUdFUiBOT1QgTlVMTCBQUklNQVJZIEtFWSBBVVRPSU5DUkVNRU5ULFxuICAgICAgICAgICAgICAgIHF1YXJ0ZXIgVEVYVCBOVUxMLCBcbiAgICAgICAgICAgICAgICB5ZWFyIElOVCBOVUxMKTtcblxuXG5cbmBgYCJ9 -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS dateTime(
+                dateTimeID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                quarter TEXT NULL, 
+                year INT NULL);
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgc3FsXG5cbkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIGFydGljbGVGYWN0KFxuICAgICAgICAgICAgICAgIHBtSUQgSU5UIE5PVCBOVUxMXG4gICAgICAgICAgICAgICAgcHViSm91cm5hbElEIElOVCBOT1QgTlVMTCxcbiAgICAgICAgICAgICAgICBudW1BdXRob3JzIElOVCwgXG4gICAgICAgICAgICAgICAgc2Vhc29uIFRFWFQpO1xuXG5gYGAifQ== -->
+<pre class="sql"><code>
+CREATE TABLE IF NOT EXISTS articleFact(
+                pmID INT NOT NULL
+                pubJournalID INT NOT NULL,
+                numAuthors INT, 
+                season TEXT);
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2F0dGFjaCBuZXdseSBjcmVhdGVkIHN0YXIgc2NoZW1hXG5kYlNlbmRTdGF0ZW1lbnQocHViLCBcIkFUVEFDSCBEQVRBQkFTRSAncHViTWVkU3Rhcic7XCIpXG5cbmBgYCJ9 -->
+<pre class="r"><code>#attach newly created star schema
+dbSendStatement(pub, &quot;ATTACH DATABASE &#39;pubMedStar&#39;;&quot;)
+</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
@@ -367,7 +1116,6 @@ dbDisconnect(dbs)
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-</div>
 <div id="part-3-use-the-olap-starsnowflake-schema-to-do-some-simple-data-mining" class="section level3">
 <h3>Part 3 use the OLAP star/snowflake schema to do some (simple) data mining</h3>
 <p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the toolbar or by pressing <em>Cmd+Option+I</em>.</p>
@@ -375,8 +1123,9 @@ dbDisconnect(dbs)
 <p>The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.</p>
 <!-- rnb-text-end -->
 </div>
+</div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiUHJhY3RpY3VtIElJIC0gTWluZSBhIERhdGFiYXNlLCBDUzUyMDAgU3ByaW5nIDIwMjEiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KClRoaXMgaXMgYW4gW1IgTWFya2Rvd25dKGh0dHA6Ly9ybWFya2Rvd24ucnN0dWRpby5jb20pIE5vdGVib29rLiBXaGVuIHlvdSBleGVjdXRlIGNvZGUgd2l0aGluIHRoZSBub3RlYm9vaywgdGhlIHJlc3VsdHMgYXBwZWFyIGJlbmVhdGggdGhlIGNvZGUuIAoKVHJ5IGV4ZWN1dGluZyB0aGlzIGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqUnVuKiBidXR0b24gd2l0aGluIHRoZSBjaHVuayBvciBieSBwbGFjaW5nIHlvdXIgY3Vyc29yIGluc2lkZSBpdCBhbmQgcHJlc3NpbmcgKkNtZCtTaGlmdCtFbnRlciouIAoKCiMjIyBQYXJ0IDEgTG9hZCBYTUw6IENyZWF0ZSBhIG5vcm1hbGl6ZWQgcmVsYXRpb25hbCBPTFRQIGRhdGFiYXNlCmBgYHtyfQojcGFjbWFuIChwYWNrYWdlIG1hbmFnZXIpIGluc3RhbGxzIGFuZCBsb2FkcyBwYWNrYWdlcyBpZiBub3QgaW5zdGFsbGVkCnBhY21hbjo6cF9sb2FkKHBhY21hbiwgUlNRTGl0ZSwgWE1MLCBEQkksIHRpZHl2ZXJzZSkKCiNjcmVhdGUgZGIgdG8gc2V0IHNjaGVtYSBhbmQgbG9hZCBkYXRhIHRvCmRicyA8LSBkYkNvbm5lY3QoUlNRTGl0ZTo6U1FMaXRlKCksICJwdWJNZWQuZGIiKQoKYGBgCgoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBMYW5ndWFnZSAoCiAgaWRMYW5ndWFnZSBJTlRFR0VSIE5PVCBOVUxMLAogIExhbmd1YWdlIFRFWFQgTk9UIE5VTEwsCiAgUFJJTUFSWSBLRVkgKGlkTGFuZ3VhZ2UpKTsKCmBgYAoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBQYWdpbmF0aW9uICgKICBwYWdpbmF0aW9uSWQgSU5URUdFUiBOT1QgTlVMTCwKICBNZWRsaW5lUGduIFRFWFQgTk9UIE5VTEwsCiAgUFJJTUFSWSBLRVkgKHBhZ2luYXRpb25JZCkpOwoKYGBgCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKQ1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgSGlzdG9yeSAoCiAgaGlzdG9yeUlkIElOVEVHRVIgTk9UIE5VTEwsCiAgUFJJTUFSWSBLRVkgKGhpc3RvcnlJZCkpOwoKYGBgCgoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KCkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIHB1YkRhdGUgKAogIHB1YkRhdGVJZCBJTlRFR0VSIE5PVCBOVUxMLAogIHllYXIgSU5URUdFUiBOT1QgTlVMTCwgCiAgbW9udGggSU5URUdFUiBOT1QgTlVMTCwKICBQUklNQVJZIEtFWSAocHViRGF0ZUlkKSk7CgpgYGAKCgojIyMgUGFydCAxIFBvcHVsYXRlIHJlbGF0aW9uYWwgZGF0YWJhc2Ugd2l0aCBkYXRhIGZyb20gYW4gWE1MIGRvY3VtZW50CiMjIyBQYXJ0IDIgQWRkIHRvIHRoZSBub3JtYWxpemVkIHNjaGVtYSBmYWN0IHRhYmxlcyBhbmQgdHVybiB0aGUgbm9ybWFsaXplZCBzY2hlbWEgaW50byBhIGRlbm9ybWFsaXplZCBzY2hlbWEgc3VpdGFibGUgZm9yIE9MQVAKCgpgYGB7cn0KCnBhdGggPC0gIi9Vc2Vycy9qZWFubmlsbGUvcmVwb3MvbWluZV9hX2RhdGFiYXNlLyIKeG1sRmlsZSA8LSAicHVibWVkX3NhbXBsZS54bWwiCmZwbiA8LSBwYXN0ZTAocGF0aCx4bWxGaWxlKQoKeG1sX2RhdGEgPC0geG1sUGFyc2UoZmlsZSA9IGZwbikKbm9kZXMgPC0gZ2V0Tm9kZVNldCh4bWxfZGF0YSwgIi8vUHVibWVkQXJ0aWNsZSIpIApyIDwtIHhtbFJvb3QoeG1sX2RhdGEpCgojIEdldCB0aGUgbmFtZSBvZiB0aGUgbm9kZSB0byBjb25maXJtCnhtbE5hbWUocikKI1B1Ym1lZEFydGljbGVTZXQKCiNnZXQgbnVtYmVyIG9mIGNoaWxkcmVuIG9mIHJvb3QsIG51bWJlciBvZiBwdWJNZWRBcnRpY2xlcyAoMTkpCm51bVB1Yk1lZHMgPC0geG1sU2l6ZShyKQoKI1BVQmRmIDwtIGRhdGEuZnJhbWUoKQoKIyBsbm9kZXMgPC0geG1sVG9MaXN0KHhtbF9kYXRhKQojIGxub2RlcwoKCgoKYGBgCgoKYGBge3J9Cgojd2lsbCB0cnkgcHJlYWxsb2FjaW5nIG1lbW9yeSBmb3IgeG1sIG5vZGVzIChjbGFzcyBtb2R1bGUgZXhhbXBsZSkKCgojUHVibWVkQXJ0aWNsZSBjaGlsZCBub2Rlcy0+IE1lZGxpbmVDaXRhdGlvbiwgUHVibWVkRGF0YQojTWVkbGluZUNpdGF0aW9uIC0+IFBNSUQsIERhdGVDcmVhdGVkLCBEYXRlQ29tcGxldGVkLCBEYXRlUmV2aXNlZCwgQXJ0aWNsZSwgTWVkbGluZUpvdXJuYWxuZm8sIE90aGVySUQsIEtleXdvcmRMaXN0CgojdXNlIHhwYXRoIHRvIHNldCBNZWRsaW5lQ2l0YXRpb24ncyBmaXJzdCBjaGlsZCBub2RlID0gUE1JRApwbWlkIDwtIHhwYXRoU0FwcGx5KHhtbF9kYXRhLCIvL01lZGxpbmVDaXRhdGlvbi9QTUlEIiwgeG1sVmFsdWUpCnBtaWQKCiNNZWRsaW5lQ2l0YXRpb24gc2Vjb25kIGNoaWxkIG5vZGUgPSBEYXRlQ3JlYXRlZCAtPiBZZWFyLCBNb250aCwgRGF5CnllYXJDcmVhdGVkIDwtIGxhcHBseShub2RlcywgeHBhdGhTQXBwbHksICIuLy9NZWRsaW5lQ2l0YXRpb24vRGF0ZUNyZWF0ZWQvWWVhci9ub2RlKCkiLCB4bWxWYWx1ZSkKeWVhckNyZWF0ZWQKCm1vbnRoQ3JlYXRlZCA8LSBsYXBwbHkobm9kZXMsIHhwYXRoU0FwcGx5LCAiLi8vTWVkbGluZUNpdGF0aW9uL0RhdGVDcmVhdGVkL01vbnRoIiwgeG1sVmFsdWUpCm1vbnRoQ3JlYXRlZAoKZGF5Q3JlYXRlZCA8LSBsYXBwbHkobm9kZXMsIHhwYXRoU0FwcGx5LCAiLi8vTWVkbGluZUNpdGF0aW9uL0RhdGVDcmVhdGVkL0RheSIsIHhtbFZhbHVlKQpkYXlDcmVhdGVkCgoKYGBgCgoKYGBge3J9CiNkYXRlQ29tcGxldGVkIC0gIE1lZGxpbmVDaXRhdGlvbidzIHNlY29uZCBjaGlsZCBub2RlL3RhZwp5ZWFyQ29tcGxldGVkIDwtIGxhcHBseShub2RlcywgeHBhdGhTQXBwbHksICIuLy9NZWRsaW5lQ2l0YXRpb24vRGF0ZUNvbXBsZXRlZC9ZZWFyIiwgeG1sVmFsdWUpCnllYXJDb21wbGV0ZWQKbW9udGhDb21wbGV0ZWQgPC0gbGFwcGx5KG5vZGVzLCB4cGF0aFNBcHBseSwgIi4vL01lZGxpbmVDaXRhdGlvbi9EYXRlQ29tcGxldGVkLy9Nb250aCIsIHhtbFZhbHVlKQptb250aENvbXBsZXRlZApkYXlDb21wbGV0ZWQgPC0gbGFwcGx5KG5vZGVzLCB4cGF0aFNBcHBseSwgIi4vL01lZGxpbmVDaXRhdGlvbi9EYXRlQ29tcGxldGVkL0RheSIsIHhtbFZhbHVlKQpkYXlDb21wbGV0ZWQKCmRhdGVDb21wIDwtIG1hcHBseShwYXN0ZSwgeWVhckNvbXBsZXRlZCwgbW9udGhDb21wbGV0ZWQsIGRheUNvbXBsZXRlZCwgY29sbGFwc2UgPSAiIikKZGF0ZUNvbXAKCmBgYAoKCgpgYGB7cn0KCmRiRGlzY29ubmVjdChkYnMpCgpgYGAKCgojIyMgUGFydCAzIHVzZSB0aGUgT0xBUCBzdGFyL3Nub3dmbGFrZSBzY2hlbWEgdG8gZG8gc29tZSAoc2ltcGxlKSBkYXRhIG1pbmluZwoKCkFkZCBhIG5ldyBjaHVuayBieSBjbGlja2luZyB0aGUgKkluc2VydCBDaHVuayogYnV0dG9uIG9uIHRoZSB0b29sYmFyIG9yIGJ5IHByZXNzaW5nICpDbWQrT3B0aW9uK0kqLgoKV2hlbiB5b3Ugc2F2ZSB0aGUgbm90ZWJvb2ssIGFuIEhUTUwgZmlsZSBjb250YWluaW5nIHRoZSBjb2RlIGFuZCBvdXRwdXQgd2lsbCBiZSBzYXZlZCBhbG9uZ3NpZGUgaXQgKGNsaWNrIHRoZSAqUHJldmlldyogYnV0dG9uIG9yIHByZXNzICpDbWQrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4gCgpUaGUgcHJldmlldyBzaG93cyB5b3UgYSByZW5kZXJlZCBIVE1MIGNvcHkgb2YgdGhlIGNvbnRlbnRzIG9mIHRoZSBlZGl0b3IuIENvbnNlcXVlbnRseSwgdW5saWtlICpLbml0KiwgKlByZXZpZXcqIGRvZXMgbm90IHJ1biBhbnkgUiBjb2RlIGNodW5rcy4gSW5zdGVhZCwgdGhlIG91dHB1dCBvZiB0aGUgY2h1bmsgd2hlbiBpdCB3YXMgbGFzdCBydW4gaW4gdGhlIGVkaXRvciBpcyBkaXNwbGF5ZWQuCgo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUHJhY3RpY3VtIElJIC0gTWluZSBhIERhdGFiYXNlLCBDUzUyMDAgU3ByaW5nIDIwMjEiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KClRoaXMgaXMgYW4gW1IgTWFya2Rvd25dKGh0dHA6Ly9ybWFya2Rvd24ucnN0dWRpby5jb20pIE5vdGVib29rLiBXaGVuIHlvdSBleGVjdXRlIGNvZGUgd2l0aGluIHRoZSBub3RlYm9vaywgdGhlIHJlc3VsdHMgYXBwZWFyIGJlbmVhdGggdGhlIGNvZGUuIAoKVHJ5IGV4ZWN1dGluZyB0aGlzIGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqUnVuKiBidXR0b24gd2l0aGluIHRoZSBjaHVuayBvciBieSBwbGFjaW5nIHlvdXIgY3Vyc29yIGluc2lkZSBpdCBhbmQgcHJlc3NpbmcgKkNtZCtTaGlmdCtFbnRlciouIAoKCiMjIyBQYXJ0IDEgTG9hZCBYTUw6IENyZWF0ZSBhIG5vcm1hbGl6ZWQgcmVsYXRpb25hbCBPTFRQIGRhdGFiYXNlCmBgYHtyfQojcGFjbWFuIChwYWNrYWdlIG1hbmFnZXIpIGluc3RhbGxzIGFuZCBsb2FkcyBwYWNrYWdlcyBpZiBub3QgaW5zdGFsbGVkCnBhY21hbjo6cF9sb2FkKHBhY21hbiwgUlNRTGl0ZSwgWE1MLCBEQkksIHRpZHl2ZXJzZSkKCiNjcmVhdGUgZGIgdG8gc2V0IHNjaGVtYSBhbmQgbG9hZCBkYXRhIHRvCmRicyA8LSBkYkNvbm5lY3QoUlNRTGl0ZTo6U1FMaXRlKCksICJwdWJNZWQuZGIiKQoKYGBgCgoKCiMjIyBQYXJ0IDEgUG9wdWxhdGUgcmVsYXRpb25hbCBkYXRhYmFzZSB3aXRoIGRhdGEgZnJvbSBhbiBYTUwgZG9jdW1lbnQKIyMjIFBhcnQgMiBBZGQgdG8gdGhlIG5vcm1hbGl6ZWQgc2NoZW1hIGZhY3QgdGFibGVzIGFuZCB0dXJuIHRoZSBub3JtYWxpemVkIHNjaGVtYSBpbnRvIGEgZGVub3JtYWxpemVkIHNjaGVtYSBzdWl0YWJsZSBmb3IgT0xBUAoKCmBgYHtyfQoKcGF0aCA8LSAiL1VzZXJzL2plYW5uaWxsZS9yZXBvcy9taW5lX2FfZGF0YWJhc2UvIgp4bWxGaWxlIDwtICJwdWJtZWRfc2FtcGxlLnhtbCIKZnBuIDwtIHBhc3RlMChwYXRoLHhtbEZpbGUpCgp4bWxfZGF0YSA8LSB4bWxQYXJzZShmaWxlID0gZnBuKQpub2RlcyA8LSBnZXROb2RlU2V0KHhtbF9kYXRhLCAiLy9QdWJtZWRBcnRpY2xlIikgCnIgPC0geG1sUm9vdCh4bWxfZGF0YSkKCiMgR2V0IHRoZSBuYW1lIG9mIHRoZSBub2RlIHRvIGNvbmZpcm0KeG1sTmFtZShyKQojUHVibWVkQXJ0aWNsZVNldAoKI2dldCBudW1iZXIgb2YgY2hpbGRyZW4gb2Ygcm9vdCwgbnVtYmVyIG9mIHB1Yk1lZEFydGljbGVzICgxOSkKbnVtUHViTWVkcyA8LSB4bWxTaXplKHIpCgoKYGBgCgoKYGBge3J9CgpuZXdKb3VybmFsLmRmIDwtIGRhdGEuZnJhbWUoSVNTTiA9IGNoYXJhY3RlcigpLCNjYW50IGJlIG51bWVyaWMgd2l0aCBhIGh5cGhlbj8KICAgICAgICAgICAgICAgICAgICAgICAgICBqb3VybmFsVGl0bGUgPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBJU09hYmJyZXZhdGlvbiA9IGNoYXJhY3RlcigpLAogICAgICAgICAgICAgICAgICAgICAgICAgIHZvbHVtZSA9IG51bWVyaWMoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBJc3N1ZSA9IG51bWVyaWMoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAjcHViWWVhciA9IG51bWVyaWMoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAjcHViTW9udGggPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRikKCmNvbG5hbWVzKG5ld0pvdXJuYWwuZGYpIDwtIGMoIklTU04iLCJqb3VybmFsVGl0bGUiLCAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiSVNPYWJicmV2YXRpb24iLCJJc3N1ZSIsInZvbHVtZSIpIywicHViWWVhciIsInB1Yk1vbnRoIikKCnIgPC0geG1sUm9vdCh4bWxfZGF0YSkKCmZvciAobSBpbiAxOjE5KQp7CgogIGFKb3VybmFsTm9kZSA8LSByW1ttXV1bWzFdXVtbJ0FydGljbGUnXV1bWydKb3VybmFsJ11dICMKCiAgYUpvdXJuYWwgPC0gYUpvdXJuYWxOb2RlW1ttXV0KICBJU1NOIDwtIHhwYXRoU0FwcGx5KGFKb3VybmFsTm9kZSwgIi4vSVNTTiIsIHhtbFZhbHVlKQogIGpvdXJuYWxUaXRsZSA8LSB4cGF0aFNBcHBseShhSm91cm5hbE5vZGUsICIuL1RpdGxlIiwgeG1sVmFsdWUpCiAgSVNPYWJicmV2YXRpb24gPC0geHBhdGhTQXBwbHkoYUpvdXJuYWxOb2RlLCAiLi9JU09BYmJyZXZpYXRpb24iLCB4bWxWYWx1ZSkKICB2b2x1bWU8LXhwYXRoU0FwcGx5KGFKb3VybmFsTm9kZSwgIi4vSm91cm5hbElzc3VlL1ZvbHVtZSIsIHhtbFZhbHVlKQogIElzc3VlIDwteHBhdGhTQXBwbHkoYUpvdXJuYWxOb2RlLCAiLi9Kb3VybmFsSXNzdWUvSXNzdWUiLCB4bWxWYWx1ZSkKICAKICAjcHViWWVhcjwteHBhdGhTQXBwbHkoYUpvdXJuYWxOb2RlLCAiLi9Kb3VybmFsSXNzdWUvUHViRGF0ZS9ZZWFyIiwgeG1sVmFsdWUpCiAgI3B1Yk1vbnRoIDwteHBhdGhTQXBwbHkoYUpvdXJuYWxOb2RlLCAiLi9Kb3VybmFsSXNzdWUvUHViRGF0ZS9Nb250aCIsIHhtbFZhbHVlKQogICAgCiAgICAKICBpZiAobGVuZ3RoKElTU04pID09IDApCiAgICBJU1NOIDwtICIiCiAgaWYgKGxlbmd0aChqb3VybmFsVGl0bGUpID09IDApCiAgICBqb3VybmFsVGl0bGUgPC0gIiIKICBpZiAobGVuZ3RoKElTT2FiYnJldmF0aW9uKSA9PSAwKQogICAgSVNPYWJicmV2YXRpb24gPC0gIiIKICAjaWYgKGxlbmd0aChwdWJNb250aCkgPT0gMCkKICAjICBwdWJNb250aCA8LSAiIgoKICBuZXdKb3VybmFsLmRmW20sMV0gPC0gSVNTTgogIG5ld0pvdXJuYWwuZGZbbSwyXSA8LSBqb3VybmFsVGl0bGUKICBuZXdKb3VybmFsLmRmW20sM10gPC0gSVNPYWJicmV2YXRpb24KICBuZXdKb3VybmFsLmRmW20sNF0gPC0gdm9sdW1lCiAgbmV3Sm91cm5hbC5kZlttLDVdIDwtIElzc3VlCiAgI25ld0pvdXJuYWwuZGZbbSw2XSA8LSBwdWJZZWFyCiAgI25ld0pvdXJuYWwuZGZbbSw3XSA8LSBwdWJNb250aAp9CiAgCmBgYApgYGB7cn0KI2NvbW1lbnRlZCBvdXQgc28gbm90IHNlZW4gaW4gYSBrbml0dGVkIGZpbGUKI25ld0pvdXJuYWwuZGYKYGBgCgoKYGBge3J9Cm5ld0FydGljbGUuZGYgPC0gZGF0YS5mcmFtZShQTUlEID0gbnVtZXJpYygpLCAjCiAgICAgICAgICAgICAgICAgICAgICAgICAgam91cm5hbElTU04gPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBhcnRpY2xlVGl0bGUgPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBwYWdpbmF0aW9uID0gY2hhcmFjdGVyKCksCiAgICAgICAgICAgICAgICAgICAgICAgICAgI2Vsb2NhdGlvbklEIGNhbiBoYXZlIG1vcmUgdGhlbiAxLiBuZWVkIGFub3RoZXIgdGFibGUgZm9yIHRoYXQ/CiAgICAgICAgICAgICAgICAgICAgICAgICAgI3NhbWUgd2l0aCBhYnN0cmFjdAogICAgICAgICAgICAgICAgICAgICAgICAgICNhbmQgYXV0aG9yIGxpc3QtIGRpZmZlcmVudCB0YWJsZT8gd2hhdCB0byB1c2UgYXMgYSBrZXk/CiAgICAgICAgICAgICAgICAgICAgICAgICAgbGFuZ3VhZ2UgPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAjZ3JhbnQgbGlzdD8KICAgICAgICAgICAgICAgICAgICAgICAgICAjcHVibGljYXRpb24gdHlwZSB0aXN0PwogICAgICAgICAgICAgICAgICAgICAgICAgIGFydFllYXIgPSBudW1lcmljKCksCiAgICAgICAgICAgICAgICAgICAgICAgICAgYXJ0TW9udGggPSBudW1lcmljKCksCiAgICAgICAgICAgICAgICAgICAgICAgICAgYXJ0RGF5ID0gbnVtZXJpYygpLAogICAgICAgICAgICAgICAgICAgICAgICAgIHB1YlllYXIgPSBudW1lcmljKCksCiAgICAgICAgICAgICAgICAgICAgICAgICAgcHViTW9udGggPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRikKCmNvbG5hbWVzKG5ld0FydGljbGUuZGYpIDwtIGMoIlBNSUQiLCJqb3VybmFsSVNTTiIsIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICJhcnRpY2xlVGl0bGUiLCJwYWdpbmF0aW9uIiwibGFuZ3VhZ2UiLCAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiYXJ0WWVhciIsICJhcnRNb250aCIsICJhcnREYXkiLCAncHViWWVhcicsICJwdWJNb250aCIpIwoKciA8LSB4bWxSb290KHhtbF9kYXRhKQoKZm9yIChtIGluIDE6MTkpCnsKICAKICBhbkFydGljbGVOb2RlIDwtIHJbW21dXVtbMV1dW1snQXJ0aWNsZSddXSNbWydKb3VybmFsJ11dICMKCiAgUE1JRCA8LSB4cGF0aFNBcHBseShyW1ttXV1bWzFdXSwgIi4vUE1JRCIsIHhtbFZhbHVlKQogIGpvdXJuYWxJU1NOIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsICIuL0pvdXJuYWwvSVNTTiIsIHhtbFZhbHVlKQogIGFydGljbGVUaXRsZSA8LSB4cGF0aFNBcHBseShhbkFydGljbGVOb2RlLCAiLi9BcnRpY2xlVGl0bGUiLCB4bWxWYWx1ZSkKICBwYWdpbmF0aW9uIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsICIuL1BhZ2luYXRpb24vTWVkbGluZVBnbiIsIHhtbFZhbHVlKQogIGxhbmd1YWdlIDwtIHhwYXRoU0FwcGx5KGFuQXJ0aWNsZU5vZGUsICIuL0xhbmd1YWdlIiwgeG1sVmFsdWUpCiAgCiAgYXJ0WWVhciA8LSB4cGF0aFNBcHBseShhbkFydGljbGVOb2RlLCAiLi9BcnRpY2xlRGF0ZS9ZZWFyIiwgeG1sVmFsdWUpCiAgYXJ0TW9udGggPC0geHBhdGhTQXBwbHkoYW5BcnRpY2xlTm9kZSwgIi4vQXJ0aWNsZURhdGUvTW9udGgiLCB4bWxWYWx1ZSkKICBhcnREYXkgPC0geHBhdGhTQXBwbHkoYW5BcnRpY2xlTm9kZSwgIi4vQXJ0aWNsZURhdGUvRGF5IiwgeG1sVmFsdWUpCiAgCiAgcHViWWVhciA8LSB4cGF0aFNBcHBseShhbkFydGljbGVOb2RlLCAiLi9Kb3VybmFsL0pvdXJuYWxJc3N1ZS9QdWJEYXRlL1llYXIiLCB4bWxWYWx1ZSkKICBwdWJNb250aCA8LSB4cGF0aFNBcHBseShhbkFydGljbGVOb2RlLCAiLi9Kb3VybmFsL0pvdXJuYWxJc3N1ZS9QdWJEYXRlL01vbnRoIiwgeG1sVmFsdWUpCiAgCiAgCiAgaWYgKGxlbmd0aChQTUlEKSA9PSAwKQogICAgUE1JRCA8LSAiIgogIGlmIChsZW5ndGgoam91cm5hbElTU04pID09IDApCiAgICBqb3VybmFsSVNTTiA8LSAiIgogIGlmIChsZW5ndGgoYXJ0aWNsZVRpdGxlKSA9PSAwKQogICAgYXJ0aWNsZVRpdGxlIDwtICIiCiAgaWYgKGxlbmd0aChwYWdpbmF0aW9uKSA9PSAwKQogICAgcGFnaW5hdGlvbiA8LSAiIgogIGlmIChsZW5ndGgobGFuZ3VhZ2UpID09IDApCiAgICBsYW5ndWFnZSA8LSAiIgogIGlmIChsZW5ndGgoYXJ0WWVhcikgPT0gMCkKICAgIGFydFllYXIgPC0gIiIKICBpZiAobGVuZ3RoKGFydE1vbnRoKSA9PSAwKQogICAgYXJ0TW9udGggPC0gIiIKICBpZiAobGVuZ3RoKGFydERheSkgPT0gMCkKICAgIGFydERheSA8LSAiIgogIAogIGlmIChsZW5ndGgocHViWWVhcikgPT0gMCkKICAgIHB1YlllYXIgPC0gIiIKICBpZiAobGVuZ3RoKHB1Yk1vbnRoKSA9PSAwKQogICAgcHViTW9udGggPC0gIiIKCiAgbmV3QXJ0aWNsZS5kZlttLDFdIDwtIFBNSUQKICBuZXdBcnRpY2xlLmRmW20sMl0gPC0gam91cm5hbElTU04KICBuZXdBcnRpY2xlLmRmW20sM10gPC0gYXJ0aWNsZVRpdGxlCiAgbmV3QXJ0aWNsZS5kZlttLDRdIDwtIHBhZ2luYXRpb24KICBuZXdBcnRpY2xlLmRmW20sNV0gPC0gbGFuZ3VhZ2UKICBuZXdBcnRpY2xlLmRmW20sNl0gPC0gYXJ0WWVhcgogIG5ld0FydGljbGUuZGZbbSw3XSA8LSBhcnRNb250aAogIG5ld0FydGljbGUuZGZbbSw4XSA8LSBhcnREYXkKICBuZXdBcnRpY2xlLmRmW20sOV0gPC0gcHViWWVhcgogIG5ld0FydGljbGUuZGZbbSwxMF0gPC0gcHViTW9udGgKfQoKYGBgCmBgYHtyfQojY29tbWVudGVkIG91dCBzbyBub3Qgc2VlbiBpbiBhIGtuaXR0ZWQgZmlsZQojbmV3QXJ0aWNsZS5kZgpgYGAKCmBgYHtyfQoKbmV3QXV0aG9yLmRmIDwtIGRhdGEuZnJhbWUoUE1JRCA9IG51bWVyaWMoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBsYXN0TmFtZSA9IGNoYXJhY3RlcigpLAogICAgICAgICAgICAgICAgICAgICAgICAgIGZvcmVOYW1lID0gY2hhcmFjdGVyKCksCiAgICAgICAgICAgICAgICAgICAgICAgICAgaW5pdGlhbHMgPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBhZmZpbGlhdGlvbiA9IGNoYXJhY3RlcigpLAogICAgICAgICAgICAgICAgICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGKQoKY29sbmFtZXMobmV3QXV0aG9yLmRmKSA8LSBjKCJQTUlEIiwibGFzdE5hbWUiLCJmb3JlTmFtZSIsIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICJpbml0aWFscyIsImFmZmlsaWF0aW9uIikKCnIgPC0geG1sUm9vdCh4bWxfZGF0YSkKcm93Q291bnQgPC0gMQpmb3IgKG0gaW4gMToxOSkKewoKICBQTUlEIDwtIHhwYXRoU0FwcGx5KHJbW21dXVtbMV1dLCAiLi9QTUlEIiwgeG1sVmFsdWUpCiAgaWYgKGxlbmd0aChQTUlEKSA9PSAwKQogICAgUE1JRCA8LSAiIgogIAogIGFuQXV0aG9yTm9kZUxpc3QgPC0gcltbbV1dW1sxXV1bWydBcnRpY2xlJ11dW1snQXV0aG9yTGlzdCddXSAKICAKICBqPC14bWxTaXplKGFuQXV0aG9yTm9kZUxpc3QpCiAgCiAgCiAgZm9yIChrIGluIDE6ail7CiAgICAKICAgIG5vZGUgPC1hbkF1dGhvck5vZGVMaXN0W1trXV0KICAgIGxhc3ROYW1lIDwtIHhwYXRoU0FwcGx5KG5vZGUsICIuL0xhc3ROYW1lIiwgeG1sVmFsdWUpCiAgICBmb3JlTmFtZSA8LSB4cGF0aFNBcHBseShub2RlLCAiLi9Gb3JlTmFtZSIsIHhtbFZhbHVlKQogICAgaW5pdGlhbHMgPC0geHBhdGhTQXBwbHkobm9kZSwgIi4vSW5pdGlhbHMiLCB4bWxWYWx1ZSkKICAgIGFmZmlsaWF0aW9uIDwtIHhwYXRoU0FwcGx5KG5vZGUsICIuL0FmZmlsaWF0aW9uIiwgeG1sVmFsdWUpCiAgICAKICAgIGlmIChsZW5ndGgobGFzdE5hbWUpID09IDApCiAgICAgIGxhc3ROYW1lIDwtICIiCiAgICBpZiAobGVuZ3RoKGZvcmVOYW1lKSA9PSAwKQogICAgICBmb3JlTmFtZSA8LSAiIgogICAgaWYgKGxlbmd0aChpbml0aWFscykgPT0gMCkKICAgICAgaW5pdGlhbHMgPC0gIiIKICAgIGlmIChsZW5ndGgoYWZmaWxpYXRpb24pID09IDApCiAgICAgIGFmZmlsaWF0aW9uIDwtICIiCiAgICAKICAgIG5ld0F1dGhvci5kZltyb3dDb3VudCwxXSA8LSBQTUlECiAgICBuZXdBdXRob3IuZGZbcm93Q291bnQsMl0gPC0gbGFzdE5hbWUKICAgIG5ld0F1dGhvci5kZltyb3dDb3VudCwzXSA8LSBmb3JlTmFtZQogICAgbmV3QXV0aG9yLmRmW3Jvd0NvdW50LDRdIDwtIGluaXRpYWxzCiAgICBuZXdBdXRob3IuZGZbcm93Q291bnQsNV0gPC0gYWZmaWxpYXRpb24KICAgIAogICAgCiAgICByb3dDb3VudCA8LSByb3dDb3VudCsxCiAgfQoKfQogIApgYGAKYGBge3J9CiNjb21tZW50ZWQgb3V0IHNvIG5vdCBzZWVuIGluIGEga25pdHRlZCBmaWxlCiNuZXdBdXRob3IuZGYKYGBgCgoKYGBge3J9CgpuZXdIaXN0b3J5LmRmIDwtIGRhdGEuZnJhbWUoUE1JRCA9IG51bWVyaWMoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICBwdWJTdGF0dXMgPSBjaGFyYWN0ZXIoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICB5ZWFyID0gbnVtZXJpYygpLAogICAgICAgICAgICAgICAgICAgICAgICAgIG1vbnRoID0gbnVtZXJpYygpLAogICAgICAgICAgICAgICAgICAgICAgICAgIGRheSA9IG51bWVyaWMoKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAjaG91ciBhbmQgbWludXRlIG5vdCB1c2VmdWwgZm9yIGFuYWx5c2lzPwogICAgICAgICAgICAgICAgICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGKQoKY29sbmFtZXMobmV3SGlzdG9yeS5kZikgPC0gYygiUE1JRCIsInB1YlN0YXR1cyIsInllYXIiLCAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAibW9udGgiLCJkYXkiKQoKciA8LSB4bWxSb290KHhtbF9kYXRhKQpyb3dDb3VudCA8LSAxCmZvciAobSBpbiAxOjE5KQp7CgogIFBNSUQgPC0geHBhdGhTQXBwbHkocltbbV1dW1sxXV0sICIuL1BNSUQiLCB4bWxWYWx1ZSkKICBpZiAobGVuZ3RoKFBNSUQpID09IDApCiAgICBQTUlEIDwtICIiCiAgCiAgYUhpc3RvcnlMaXN0IDwtIHJbW21dXVtbJ1B1Ym1lZERhdGEnXV1bWydIaXN0b3J5J11dCiAgCiAgajwteG1sU2l6ZShhSGlzdG9yeUxpc3QpCiAgCiAgCiAgZm9yIChrIGluIDE6ail7CiAgICAKICAgIG5vZGUgPC1hSGlzdG9yeUxpc3RbW2tdXQogICAgCiAgICBwdWJTdGF0dXMgPC0geG1sR2V0QXR0cihub2RlLCdQdWJTdGF0dXMnKQoKICAgIHllYXIgPC0geHBhdGhTQXBwbHkobm9kZSwgIi4vWWVhciIsIHhtbFZhbHVlKQogICAgbW9udGggPC0geHBhdGhTQXBwbHkobm9kZSwgIi4vTW9udGgiLCB4bWxWYWx1ZSkKICAgIGRheSA8LSB4cGF0aFNBcHBseShub2RlLCAiLi9EYXkiLCB4bWxWYWx1ZSkKICAgIAoKICAgIGlmIChsZW5ndGgocHViU3RhdHVzKSA9PSAwKQogICAgICBwdWJTdGF0dXMgPC0gIiIKICAgIGlmIChsZW5ndGgoeWVhcikgPT0gMCkKICAgICAgeWVhciA8LSAiIgogICAgaWYgKGxlbmd0aChtb250aCkgPT0gMCkKICAgICAgbW9udGggPC0gIiIKICAgIGlmIChsZW5ndGgoZGF5KSA9PSAwKQogICAgICBkYXkgPC0gIiIKICAgIAogICAgbmV3SGlzdG9yeS5kZltyb3dDb3VudCwxXSA8LSBQTUlECiAgICBuZXdIaXN0b3J5LmRmW3Jvd0NvdW50LDJdIDwtIHB1YlN0YXR1cwogICAgbmV3SGlzdG9yeS5kZltyb3dDb3VudCwzXSA8LSB5ZWFyCiAgICBuZXdIaXN0b3J5LmRmW3Jvd0NvdW50LDRdIDwtIG1vbnRoCiAgICBuZXdIaXN0b3J5LmRmW3Jvd0NvdW50LDVdIDwtIGRheQogICAgCiAgICAKICAgIHJvd0NvdW50IDwtIHJvd0NvdW50KzEKICB9Cgp9CiAgCmBgYApgYGB7cn0KI2NvbW1lbnRlZCBvdXQgc28gbm90IHNlZW4gaW4gYSBrbml0dGVkIGZpbGUKI25ld0hpc3RvcnkuZGYKYGBgCgoKCgoKVGFibGVzIGFyZSBjcmVhdGVkIGhlcmUKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkRST1AgVEFCTEUgSUYgRVhJU1RTIEpvdXJuYWwKYGBgCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkRST1AgVEFCTEUgSUYgRVhJU1RTIEFydGljbGUKYGBgCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkRST1AgVEFCTEUgSUYgRVhJU1RTIEF1dGhvcnNoaXAKYGBgCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkRST1AgVEFCTEUgSUYgRVhJU1RTIEF1dGhvcgpgYGAKYGBge3NxbCBjb25uZWN0aW9uPWRic30KRFJPUCBUQUJMRSBJRiBFWElTVFMgSGlzdG9yeQpgYGAKCmBgYHtyfQpkYkxpc3RUYWJsZXMoZGJzKQpgYGAKCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBKb3VybmFsICgKICBJU1NOIHZhcmNoYXIoMjU1KSBwcmltYXJ5IGtleSwKICB0aXRsZSB2YXJjaGFyKDI1NSksCiAgSVNPYWJicmV2YXRpb24gdmFyY2hhcigyNTUpCgogICk7CmBgYAoKYXJ0aWNsZUtleSBJTlRFR0VSIHByaW1hcnkga2V5IEFVVE9JTkNSRU1FTlQsCgogIHllYXIgaW50KDI1NSksCiAgbW9udGggaW50KDI1NSksCiAgZGF5IGludCgyNTUpLApgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBBcnRpY2xlICgKICAKICBQTUlEIGludCgyNTUpIE5PVCBOVUxMLAogIGpvdXJuYWxJU1NOIHZhcmNoYXIoMjU1KSwKICB0aXRsZSB2YXJjaGFyKDI1NSksCiAgcGFnaW5hdGlvbiB2YXJjaGFyKDI1NSksCiAgbGFuZ3VhZ2UgdmFyY2hhcigyNTUpLAoKCiAgRk9SRUlHTiBLRVkgKGpvdXJuYWxJU1NOICkgUkVGRVJFTkNFUyBKb3VybmFsKElTU04pCiAgKTsKYGBgCgogIGhpc3RLZXkgSU5URUdFUiBwcmltYXJ5IGtleSBBVVRPSU5DUkVNRU5ULAogIAogIHVzZSBjb21wb3VuZCBrZXkgaW5zdGVhZD8KYGBge3NxbCBjb25uZWN0aW9uPWRic30KQ1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgSGlzdG9yeSAoCgogIFBNSUQgaW50KDI1NSksCiAgcHViU3RhdHVzIHZhcmNoYXIoMjU1KSwKICB5ZWFyIGludCgyNTUpLAogIG1vbnRoIGludCgyNTUpLAogIGRheSBpbnQoMjU1KSwKICBQUklNQVJZICBLRVkgKFBNSUQsIHB1YlN0YXR1cyksCiAgRk9SRUlHTiBLRVkgKFBNSUQpIFJFRkVSRU5DRVMgQXJ0aWNsZShQTUlEKQogICk7CmBgYAoKYWRkaW5nIGluIHRoaXMgbG9va3VwIHRhYmxlCm1pZ2h0IG5lZWQgY29tcG91bmQgcHJpbWFyeSBrZXk/CmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIEF1dGhvcnNoaXAgKAogIGxvb2t1cEtleSBJTlRFR0VSIHByaW1hcnkga2V5IEFVVE9JTkNSRU1FTlQsCiAgUE1JRCBpbnQoMjU1KSwKICBsYXN0TmFtZSB2YXJjaGFyKDI1NSksCiAgZm9yZU5hbWUgdmFyY2hhcigyNTUpLAogIEZPUkVJR04gS0VZIChQTUlEKSBSRUZFUkVOQ0VTIEFydGljbGUoUE1JRCksCiAgRk9SRUlHTiBLRVkgKGxhc3ROYW1lLCBmb3JlTmFtZSkgUkVGRVJFTkNFUyBBdXRob3IobGFzdE5hbWUsIGZvcmVOYW1lKQogICk7CmBgYAoKICBQTUlEIGludCgyNTUpLAogIAogICwKICBGT1JFSUdOIEtFWSAoUE1JRCkgUkVGRVJFTkNFUyBBcnRpY2xlKFBNSUQpCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIEF1dGhvciAoCiAgYXV0aG9yS2V5IElOVEVHRVIgcHJpbWFyeSBrZXkgQVVUT0lOQ1JFTUVOVCwKCiAgbGFzdE5hbWUgdmFyY2hhcigyNTUpLAogIGZvcmVOYW1lIHZhcmNoYXIoMjU1KSwKICBpbml0aWFscyB2YXJjaGFyKDI1NSksCiAgYWZmaWxpYXRpb24gdmFyY2hhcigyNTUpCiAgKTsKYGBgCgoKSW5zZXJ0aW5nIGRhdGEgaW50byB0aGUgdGFibGVzLiBXaWxsIGxpa2VseSBuZWVkIHRvIGJlIGFkanVzdGVkIAoKYGBge3J9CmRiV3JpdGVUYWJsZShkYnMsICJqb3VybmFsRGF0YSIsbmV3Sm91cm5hbC5kZiApCmBgYApgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKU0VMRUNUIGRpc3RpbmN0IApJU1NOLGpvdXJuYWxUaXRsZSxJU09hYmJyZXZhdGlvbiBmcm9tIGpvdXJuYWxEYXRhIApgYGAKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CklOU0VSVCBJTlRPIEpvdXJuYWwgKElTU04gLCB0aXRsZSxJU09hYmJyZXZhdGlvbikKU0VMRUNUICBkaXN0aW5jdCBJU1NOLCBqb3VybmFsVGl0bGUsIElTT2FiYnJldmF0aW9uCkZST00gam91cm5hbERhdGEKCgpgYGAKYGBge3NxbCBjb25uZWN0aW9uPWRic30KClNFTEVDVCBJU09hYmJyZXZhdGlvbiBmcm9tIEpvdXJuYWwgbGltaXQgNQpgYGAKYGBge3NxbCBjb25uZWN0aW9uPWRic30KRFJPUCBUQUJMRSBqb3VybmFsRGF0YQpgYGAKCgpgYGB7cn0KZGJXcml0ZVRhYmxlKGRicywgImFydGljbGVEYXRhIixuZXdBcnRpY2xlLmRmICkKYGBgCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpTRUxFQ1QgZGlzdGluY3QgUE1JRCBmcm9tIGFydGljbGVEYXRhCmBgYAoKClJlbW92ZSB5ZWFyLyBtb250aC9kYXk/CiwgeWVhcixtb250aCxkYXkKLCBhcnRZZWFyLGFydE1vbnRoLGFydERheQpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQpJTlNFUlQgSU5UTyBBcnRpY2xlIChQTUlEICwgam91cm5hbElTU04sIHRpdGxlLCBwYWdpbmF0aW9uLGxhbmd1YWdlKQpTRUxFQ1QgIFBNSUQsIGpvdXJuYWxJU1NOLCBhcnRpY2xlVGl0bGUsIHBhZ2luYXRpb24sbGFuZ3VhZ2UKRlJPTSBhcnRpY2xlRGF0YQoKCmBgYAoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KClNFTEVDVCAqIGZyb20gQXJ0aWNsZSBsaW1pdCA1CmBgYAoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KRFJPUCBUQUJMRSBhcnRpY2xlRGF0YQpgYGAKCgoKYGBge3J9CmRiV3JpdGVUYWJsZShkYnMsICJoaXN0RGF0YSIsbmV3SGlzdG9yeS5kZiApCmBgYAoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KClNFTEVDVCAgZGlzdGluY3QgKiBmcm9tIGhpc3REYXRhICB3aGVyZSBwdWJTdGF0dXMgPSAicHVibWVkIiAKYGBgCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQpJTlNFUlQgSU5UTyBIaXN0b3J5IChQTUlEICwgcHViU3RhdHVzLCB5ZWFyLCBtb250aCxkYXkpClNFTEVDVCAgUE1JRCAsIHB1YlN0YXR1cywgeWVhciwgbW9udGgsZGF5CkZST00gaGlzdERhdGEKCgpgYGAKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpTRUxFQ1QgKiBmcm9tIEhpc3RvcnkgbGltaXQgNQpgYGAKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CkRST1AgVEFCTEUgaGlzdERhdGEKYGBgCgoKYGBge3J9CmRiV3JpdGVUYWJsZShkYnMsICJhdXRob3JEYXRhIixuZXdBdXRob3IuZGYgKQpgYGAKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpTRUxFQ1QgICogZnJvbSBhdXRob3JEYXRhCmBgYAoKUE1JRCAsClBNSUQgLApgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQpJTlNFUlQgSU5UTyBBdXRob3IgKCBsYXN0TmFtZSwgZm9yZU5hbWUsIGluaXRpYWxzLGFmZmlsaWF0aW9uKQpTRUxFQ1QgICBsYXN0TmFtZSwgZm9yZU5hbWUsIGluaXRpYWxzLGFmZmlsaWF0aW9uCkZST00gYXV0aG9yRGF0YQoKCmBgYApgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKU0VMRUNUIGRpc3RpbmN0ICogZnJvbSBBdXRob3IgbGltaXQgNQpgYGAKCkluaXRpYWxzIGlzIG5vdCBpbmNsdWRlZCBpbiB0aGUga2V5cyBmb3IgQXV0aG9yc2hpcCBiZWNhdXNlIGl0IGRvc2VudCBpbXBhY3QgdGhlIHJlc3VsdHMuIDg0IHVuaXF1ZSBmaXJzdCBhbmQgbGFzdCBuYW1lIHBhaXJzLCBhbmQgODQgZmlyc3QsIGxhc3QgYW5kIGluaXRpYWwgcGFpcnMuCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CklOU0VSVCBJTlRPIEF1dGhvcnNoaXAgKCBQTUlELCBsYXN0TmFtZSwgZm9yZU5hbWUpClNFTEVDVCAgIFBNSUQsIGxhc3ROYW1lLCBmb3JlTmFtZQpGUk9NIGF1dGhvckRhdGEKCgpgYGAKCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKU0VMRUNUICogZnJvbSBBdXRob3JzaGlwIGxpbWl0IDUKYGBgCgoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KRFJPUCBUQUJMRSBhdXRob3JEYXRhCmBgYAoKCgoKCgoKIyMjIFBhcnQgMgoKCgojIyBDcmVhZSBuZXcgYW5kIGRiIFN0YXIgc2NoZW1hCmBgYHtyfQpwdWIgPC0gZGJDb25uZWN0KFJTUUxpdGU6OlNRTGl0ZSgpLCAicHViTWVkU3Rhci5kYiIpCmBgYAoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KCi0tdXNlIHRvIGNsZWFyIHRhYmxlcwpEUk9QIFRBQkxFIElGIEVYSVNUUyBhdXRob3I7IikKRFJPUCBUQUJMRSBJRiBFWElTVFMgYXV0aG9yQXJ0aWNsZTsiKQpEUk9QIFRBQkxFIElGIEVYSVNUUyBhcnRpY2xlOyIpCkRST1AgVEFCTEUgSUYgRVhJU1RTIGFydGljbGVKb3VybmFsOyIpCkRST1AgVEFCTEUgSUYgRVhJU1RTIGhpc3Rvcnk7CgpgYGAKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpTRUxFQ1QgICogZnJvbSBIaXN0b3J5CmBgYAoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KQ1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgaGlzdG9yeURpbWVuc2lvbiAoaGlzdG9yeURpbUlEIElOVEVHRVIgUFJJTUFSWSBLRVkgYXV0b2luY3JlbWVudCwgCiAgaGlzdG9yeURpbUlkIElOVEVHRVIsCiAgcHViU3RhdHVzIFRFWFQsCiAgaGlzdG9yeURhdGUgVEVYVCwKICBoaXN0b3J5VGltZSBURVhULAogIGhpc3RvcnlNb250aCBJTlRFR0VSLAogIGhpc3RvcnlEYXkgSU5URUdFUiwKICBoaXN0b3J5UXVhcnRlciBJTlRFR0VSKTsKCmBgYAoKCgojIyBVc2luZyBvcmlnaW5hbCB0YWJsZSB0byBnZXQgCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpJTlNFUlQgSU5UTyBoaXN0b3J5RGltZW5zaW9uKGhpc3RvcnlEaW1JZCwgcHViU3RhdHVzLCBoaXN0b3J5RGF0ZSwgaGlzdG9yeVRpbWUsIGhpc3RvcnlNb250aCwgaGlzdG9yeURheSwgaGlzdG9yeVF1YXJ0ZXIpClNFTEVDVCBIaXN0b3J5LlBNSUQgQVMgaGlzdG9yeURpbUlkLAogSGlzdG9yeS5wdWJTdGF0dXMgQVMgcHViU3RhdHVzLAogSGlzdG9yeS5tb250aCB8fCAiLSIgfHwgSGlzdG9yeS5kYXkgfHwgIi0iIHx8IEhpc3RvcnkueWVhciBBUyBkYXRlLAogSGlzdG9yeS5tb250aCBhcyBoaXN0b3J5TW9udGgsCiBIaXN0b3J5LmRheSBhcyBoaXN0b3J5RGF5LAogIENBU0UKICAgIFdIRU4gSGlzdG9yeS5tb250aCBCRVRXRUVOIDEgQU5EIDMgVEhFTiAxCiAgICBXSEVOIEhpc3RvcnkubW9udGggQkVUV0VFTiA0IEFORCA2IFRIRU4gMgogICAgV0hFTiBIaXN0b3J5Lm1vbnRoIEJFVFdFRU4gNyBBTkQgOSBUSEVOIDMKICAgIFdIRU4gSGlzdG9yeS5tb250aCBCZXR3ZWVuIDEwIEFORCAxMiBUSEVOIDQKICBFTkQKICBGUk9NIEhpc3RvcnkKCmBgYAoKCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKQ1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgYXJ0aWNsZSgKICAgICAgICAgICAgICAgIHBtSUQgSU5UIE5PVCBOVUxMLCAKICAgICAgICAgICAgICAgIGRhdGVUaW1lSUQgSU5UIE5vdCBOVUxMLCAKICAgICAgICAgICAgICAgIGF1dGhvcklEIElOVCBOT1QgTlVMTCwKICAgICAgICAgICAgICAgIHB1YkpvdXJuYWxJRCBJTlQsCiAgICAgICAgICAgICAgICBGT1JFSUdOIEtFWSAoZGF0ZVRpbWVJRCkgcmVmZXJlbmNlcyBkYXRlVGltZShkYXRlVGltZUlEKSAKICAgICAgICAgICAgICAgIEZPUkVJR04gS0VZIChhdXRob3JJRCkgcmVmZXJlbmNlcyBhdXRob3IoYXV0aG9ySUQpIAogICAgICAgICAgICAgICAgRk9SRUlHTiBLRVkgKHB1YkpvdXJuYWxJRCkgcmVmZXJlbmNlcyBqb3VybmFsKGpvdXJuYWxJRCkKICAgICAgICAgICAgICAgIEZPUkVJR04gS0VZIChwbUlELCBhdXRob3JJRCkpOwpgYGAKCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBhcnRpY2xlRGF0YSgKICAgICAgICAgICAgICAgIHBtSUQgSU5UIG5vdCBudWxsLCAKICAgICAgICAgICAgICAgIGRvaSBURVhUIE5VTEwsCiAgICAgICAgICAgICAgICBhYnN0cmFjdCBURVhUIE5VTEwsIAogICAgICAgICAgICAgICAgYXJ0aWNsZVRpdGxlIFRFWFQgTlVMTCwgCiAgICAgICAgICAgICAgICBwdWJNb2RlbCBURVhUIG51bGwsIAogICAgICAgICAgICAgICAgcHViWWVhciBURVhUIG51bGwsIAogICAgICAgICAgICAgICAgcHViTW9udGggVEVYVCBudWxsLAogICAgICAgICAgICAgICAgcHJpbWFyeSBrZXkgKHBtSUQpKTsKCmBgYAoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBhdXRob3IoCiAgICAgICAgICAgICAgICBhdXRob3JJZCBOT1QgTlVMTCwgCiAgICAgICAgICAgICAgICBsYXN0TmFtZSBURVhUIE5VTEwsIAogICAgICAgICAgICAgICAgZm9yZU5hbWUgVGV4dCBOVUxMLCAKICAgICAgICAgICAgICAgIGFmZmlsaWF0aW9uIHRleHQgTlVMTCwgCiAgICAgICAgICAgICAgICBQUklNQVJZIEtFWShhdXRob3JJRCkpOwoKYGBgCgoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBhcnRpY2xlSm91cm5hbCgKICAgICAgICAgICAgICAgIGpvdXJuYWxJRCBJTlQgbm90IG51bGwgUFJJTUFSWSBLRVksCiAgICAgICAgICAgICAgICB2b2x1bWUgSU5UIG51bGwsIAogICAgICAgICAgICAgICAgaXNzdWUgSU5UIG51bGwsIAogICAgICAgICAgICAgICAgbWVkTGluZVBHTiBJTlQgTlVMTCk7CgpgYGAKCgpgYGB7c3FsIGNvbm5lY3Rpb249ZGJzfQoKY3JlYXRlIHRhYmxlIGlmIG5vdCBleGlzdHMgam91cm5hbEluZm8oCiAgICAgICAgICAgICAgICBqb3VybmFsSWQgSU5UIE5PVCBOVUxMLAogICAgICAgICAgICAgICAgaXNzbiBURVhUIG5vdCBudWxsLAogICAgICAgICAgICAgICAgaXNzblR5cGUgVEVYVCBOVUxMLAogICAgICAgICAgICAgICAgam91cm5hbCB0ZXh0IE5VTEwsIAogICAgICAgICAgICAgICAgcHJpbWFyeSBrZXkgKGpvdXJuYWxJZCkpOwoKYGBgCgoKCmBgYHtzcWwgY29ubmVjdGlvbj1kYnN9CgpDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUyBkYXRlVGltZSgKICAgICAgICAgICAgICAgIGRhdGVUaW1lSUQgSU5URUdFUiBOT1QgTlVMTCBQUklNQVJZIEtFWSBBVVRPSU5DUkVNRU5ULAogICAgICAgICAgICAgICAgcXVhcnRlciBURVhUIE5VTEwsIAogICAgICAgICAgICAgICAgeWVhciBJTlQgTlVMTCk7CgoKCmBgYAoKYGBge3NxbCBjb25uZWN0aW9uPWRic30KCkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJU1RTIGFydGljbGVGYWN0KAogICAgICAgICAgICAgICAgcG1JRCBJTlQgTk9UIE5VTEwKICAgICAgICAgICAgICAgIHB1YkpvdXJuYWxJRCBJTlQgTk9UIE5VTEwsCiAgICAgICAgICAgICAgICBudW1BdXRob3JzIElOVCwgCiAgICAgICAgICAgICAgICBzZWFzb24gVEVYVCk7CgpgYGAKCgpgYGB7cn0KI2F0dGFjaCBuZXdseSBjcmVhdGVkIHN0YXIgc2NoZW1hCmRiU2VuZFN0YXRlbWVudChwdWIsICJBVFRBQ0ggREFUQUJBU0UgJ3B1Yk1lZFN0YXInOyIpCgpgYGAKCgoKCmBgYHtyfQoKZGJEaXNjb25uZWN0KGRicykKCmBgYAoKCiMjIyBQYXJ0IDMgdXNlIHRoZSBPTEFQIHN0YXIvc25vd2ZsYWtlIHNjaGVtYSB0byBkbyBzb21lIChzaW1wbGUpIGRhdGEgbWluaW5nCgoKCgpBZGQgYSBuZXcgY2h1bmsgYnkgY2xpY2tpbmcgdGhlICpJbnNlcnQgQ2h1bmsqIGJ1dHRvbiBvbiB0aGUgdG9vbGJhciBvciBieSBwcmVzc2luZyAqQ21kK09wdGlvbitJKi4KCldoZW4geW91IHNhdmUgdGhlIG5vdGVib29rLCBhbiBIVE1MIGZpbGUgY29udGFpbmluZyB0aGUgY29kZSBhbmQgb3V0cHV0IHdpbGwgYmUgc2F2ZWQgYWxvbmdzaWRlIGl0IChjbGljayB0aGUgKlByZXZpZXcqIGJ1dHRvbiBvciBwcmVzcyAqQ21kK1NoaWZ0K0sqIHRvIHByZXZpZXcgdGhlIEhUTUwgZmlsZSkuIAoKVGhlIHByZXZpZXcgc2hvd3MgeW91IGEgcmVuZGVyZWQgSFRNTCBjb3B5IG9mIHRoZSBjb250ZW50cyBvZiB0aGUgZWRpdG9yLiBDb25zZXF1ZW50bHksIHVubGlrZSAqS25pdCosICpQcmV2aWV3KiBkb2VzIG5vdCBydW4gYW55IFIgY29kZSBjaHVua3MuIEluc3RlYWQsIHRoZSBvdXRwdXQgb2YgdGhlIGNodW5rIHdoZW4gaXQgd2FzIGxhc3QgcnVuIGluIHRoZSBlZGl0b3IgaXMgZGlzcGxheWVkLgoK</div>
 
 
 

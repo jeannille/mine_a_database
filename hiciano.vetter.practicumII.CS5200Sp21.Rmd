@@ -20,45 +20,6 @@ dbs <- dbConnect(RSQLite::SQLite(), "pubMed.db")
 
 
 
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS Language (
-  idLanguage INTEGER NOT NULL,
-  Language TEXT NOT NULL,
-  PRIMARY KEY (idLanguage));
-
-```
-
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS Pagination (
-  paginationId INTEGER NOT NULL,
-  MedlinePgn TEXT NOT NULL,
-  PRIMARY KEY (paginationId));
-
-```
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS History (
-  historyId INTEGER NOT NULL,
-  PRIMARY KEY (historyId));
-
-```
-
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS pubDate (
-  pubDateId INTEGER NOT NULL,
-  year INTEGER NOT NULL, 
-  month INTEGER NOT NULL,
-  PRIMARY KEY (pubDateId));
-
-```
-
-
 ### Part 1 Populate relational database with data from an XML document
 ### Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP
 
@@ -80,56 +41,664 @@ xmlName(r)
 #get number of children of root, number of pubMedArticles (19)
 numPubMeds <- xmlSize(r)
 
-#PUBdf <- data.frame()
-
-# lnodes <- xmlToList(xml_data)
-# lnodes
-
-
-
 
 ```
 
 
 ```{r}
 
-#will try prealloacing memory for xml nodes (class module example)
+newJournal.df <- data.frame(ISSN = character(),#cant be numeric with a hyphen?
+                          journalTitle = character(),
+                          ISOabbrevation = character(),
+                          volume = numeric(),
+                          Issue = numeric(),
+                          #pubYear = numeric(),
+                          #pubMonth = character(),
+                          stringsAsFactors = F)
+
+colnames(newJournal.df) <- c("ISSN","journalTitle", 
+                             "ISOabbrevation","Issue","volume")#,"pubYear","pubMonth")
+
+r <- xmlRoot(xml_data)
+
+for (m in 1:19)
+{
+
+  aJournalNode <- r[[m]][[1]][['Article']][['Journal']] #
+
+  aJournal <- aJournalNode[[m]]
+  ISSN <- xpathSApply(aJournalNode, "./ISSN", xmlValue)
+  journalTitle <- xpathSApply(aJournalNode, "./Title", xmlValue)
+  ISOabbrevation <- xpathSApply(aJournalNode, "./ISOAbbreviation", xmlValue)
+  volume<-xpathSApply(aJournalNode, "./JournalIssue/Volume", xmlValue)
+  Issue <-xpathSApply(aJournalNode, "./JournalIssue/Issue", xmlValue)
+  
+  #pubYear<-xpathSApply(aJournalNode, "./JournalIssue/PubDate/Year", xmlValue)
+  #pubMonth <-xpathSApply(aJournalNode, "./JournalIssue/PubDate/Month", xmlValue)
+    
+    
+  if (length(ISSN) == 0)
+    ISSN <- ""
+  if (length(journalTitle) == 0)
+    journalTitle <- ""
+  if (length(ISOabbrevation) == 0)
+    ISOabbrevation <- ""
+  #if (length(pubMonth) == 0)
+  #  pubMonth <- ""
+
+  newJournal.df[m,1] <- ISSN
+  newJournal.df[m,2] <- journalTitle
+  newJournal.df[m,3] <- ISOabbrevation
+  newJournal.df[m,4] <- volume
+  newJournal.df[m,5] <- Issue
+  #newJournal.df[m,6] <- pubYear
+  #newJournal.df[m,7] <- pubMonth
+}
+  
+```
+```{r}
+#commented out so not seen in a knitted file
+#newJournal.df
+```
 
 
-#PubmedArticle child nodes-> MedlineCitation, PubmedData
-#MedlineCitation -> PMID, DateCreated, DateCompleted, DateRevised, Article, MedlineJournalnfo, OtherID, KeywordList
+```{r}
+newArticle.df <- data.frame(PMID = numeric(), #
+                          journalISSN = character(),
+                          articleTitle = character(),
+                          pagination = character(),
+                          #elocationID can have more then 1. need another table for that?
+                          #same with abstract
+                          #and author list- different table? what to use as a key?
+                          language = character(),
+                          #grant list?
+                          #publication type tist?
+                          artYear = numeric(),
+                          artMonth = numeric(),
+                          artDay = numeric(),
+                          pubYear = numeric(),
+                          pubMonth = character(),
+                          stringsAsFactors = F)
 
-#use xpath to set MedlineCitation's first child node = PMID
-pmid <- xpathSApply(xml_data,"//MedlineCitation/PMID", xmlValue)
-pmid
+colnames(newArticle.df) <- c("PMID","journalISSN", 
+                             "articleTitle","pagination","language", 
+                             "artYear", "artMonth", "artDay", 'pubYear', "pubMonth")#
 
-#MedlineCitation second child node = DateCreated -> Year, Month, Day
-yearCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Year/node()", xmlValue)
-yearCreated
+r <- xmlRoot(xml_data)
 
-monthCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Month", xmlValue)
-monthCreated
+for (m in 1:19)
+{
+  
+  anArticleNode <- r[[m]][[1]][['Article']]#[['Journal']] #
 
-dayCreated <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCreated/Day", xmlValue)
-dayCreated
+  PMID <- xpathSApply(r[[m]][[1]], "./PMID", xmlValue)
+  journalISSN <- xpathSApply(anArticleNode, "./Journal/ISSN", xmlValue)
+  articleTitle <- xpathSApply(anArticleNode, "./ArticleTitle", xmlValue)
+  pagination <- xpathSApply(anArticleNode, "./Pagination/MedlinePgn", xmlValue)
+  language <- xpathSApply(anArticleNode, "./Language", xmlValue)
+  
+  artYear <- xpathSApply(anArticleNode, "./ArticleDate/Year", xmlValue)
+  artMonth <- xpathSApply(anArticleNode, "./ArticleDate/Month", xmlValue)
+  artDay <- xpathSApply(anArticleNode, "./ArticleDate/Day", xmlValue)
+  
+  pubYear <- xpathSApply(anArticleNode, "./Journal/JournalIssue/PubDate/Year", xmlValue)
+  pubMonth <- xpathSApply(anArticleNode, "./Journal/JournalIssue/PubDate/Month", xmlValue)
+  
+  
+  if (length(PMID) == 0)
+    PMID <- ""
+  if (length(journalISSN) == 0)
+    journalISSN <- ""
+  if (length(articleTitle) == 0)
+    articleTitle <- ""
+  if (length(pagination) == 0)
+    pagination <- ""
+  if (length(language) == 0)
+    language <- ""
+  if (length(artYear) == 0)
+    artYear <- ""
+  if (length(artMonth) == 0)
+    artMonth <- ""
+  if (length(artDay) == 0)
+    artDay <- ""
+  
+  if (length(pubYear) == 0)
+    pubYear <- ""
+  if (length(pubMonth) == 0)
+    pubMonth <- ""
 
+  newArticle.df[m,1] <- PMID
+  newArticle.df[m,2] <- journalISSN
+  newArticle.df[m,3] <- articleTitle
+  newArticle.df[m,4] <- pagination
+  newArticle.df[m,5] <- language
+  newArticle.df[m,6] <- artYear
+  newArticle.df[m,7] <- artMonth
+  newArticle.df[m,8] <- artDay
+  newArticle.df[m,9] <- pubYear
+  newArticle.df[m,10] <- pubMonth
+}
+
+```
+```{r}
+#commented out so not seen in a knitted file
+#newArticle.df
+```
+
+```{r}
+
+newAuthor.df <- data.frame(PMID = numeric(),
+                          lastName = character(),
+                          foreName = character(),
+                          initials = character(),
+                          affiliation = character(),
+                          stringsAsFactors = F)
+
+colnames(newAuthor.df) <- c("PMID","lastName","foreName", 
+                             "initials","affiliation")
+
+r <- xmlRoot(xml_data)
+rowCount <- 1
+for (m in 1:19)
+{
+
+  PMID <- xpathSApply(r[[m]][[1]], "./PMID", xmlValue)
+  if (length(PMID) == 0)
+    PMID <- ""
+  
+  anAuthorNodeList <- r[[m]][[1]][['Article']][['AuthorList']] 
+  
+  j<-xmlSize(anAuthorNodeList)
+  
+  
+  for (k in 1:j){
+    
+    node <-anAuthorNodeList[[k]]
+    lastName <- xpathSApply(node, "./LastName", xmlValue)
+    foreName <- xpathSApply(node, "./ForeName", xmlValue)
+    initials <- xpathSApply(node, "./Initials", xmlValue)
+    affiliation <- xpathSApply(node, "./Affiliation", xmlValue)
+    
+    if (length(lastName) == 0)
+      lastName <- ""
+    if (length(foreName) == 0)
+      foreName <- ""
+    if (length(initials) == 0)
+      initials <- ""
+    if (length(affiliation) == 0)
+      affiliation <- ""
+    
+    newAuthor.df[rowCount,1] <- PMID
+    newAuthor.df[rowCount,2] <- lastName
+    newAuthor.df[rowCount,3] <- foreName
+    newAuthor.df[rowCount,4] <- initials
+    newAuthor.df[rowCount,5] <- affiliation
+    
+    
+    rowCount <- rowCount+1
+  }
+
+}
+  
+```
+```{r}
+#commented out so not seen in a knitted file
+#newAuthor.df
+```
+
+
+```{r}
+
+newHistory.df <- data.frame(PMID = numeric(),
+                          pubStatus = character(),
+                          year = numeric(),
+                          month = numeric(),
+                          day = numeric(),
+                          #hour and minute not useful for analysis?
+                          stringsAsFactors = F)
+
+colnames(newHistory.df) <- c("PMID","pubStatus","year", 
+                             "month","day")
+
+r <- xmlRoot(xml_data)
+rowCount <- 1
+for (m in 1:19)
+{
+
+  PMID <- xpathSApply(r[[m]][[1]], "./PMID", xmlValue)
+  if (length(PMID) == 0)
+    PMID <- ""
+  
+  aHistoryList <- r[[m]][['PubmedData']][['History']]
+  
+  j<-xmlSize(aHistoryList)
+  
+  
+  for (k in 1:j){
+    
+    node <-aHistoryList[[k]]
+    
+    pubStatus <- xmlGetAttr(node,'PubStatus')
+
+    year <- xpathSApply(node, "./Year", xmlValue)
+    month <- xpathSApply(node, "./Month", xmlValue)
+    day <- xpathSApply(node, "./Day", xmlValue)
+    
+
+    if (length(pubStatus) == 0)
+      pubStatus <- ""
+    if (length(year) == 0)
+      year <- ""
+    if (length(month) == 0)
+      month <- ""
+    if (length(day) == 0)
+      day <- ""
+    
+    newHistory.df[rowCount,1] <- PMID
+    newHistory.df[rowCount,2] <- pubStatus
+    newHistory.df[rowCount,3] <- year
+    newHistory.df[rowCount,4] <- month
+    newHistory.df[rowCount,5] <- day
+    
+    
+    rowCount <- rowCount+1
+  }
+
+}
+  
+```
+```{r}
+#commented out so not seen in a knitted file
+#newHistory.df
+```
+
+
+
+
+
+Tables are created here
+
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Journal
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Article
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Authorship
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS Author
+```
+```{sql connection=dbs}
+DROP TABLE IF EXISTS History
+```
+
+```{r}
+dbListTables(dbs)
+```
+
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Journal (
+  ISSN varchar(255) primary key,
+  title varchar(255),
+  ISOabbrevation varchar(255)
+
+  );
+```
+
+articleKey INTEGER primary key AUTOINCREMENT,
+
+  year int(255),
+  month int(255),
+  day int(255),
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Article (
+  
+  PMID int(255) NOT NULL,
+  journalISSN varchar(255),
+  title varchar(255),
+  pagination varchar(255),
+  language varchar(255),
+
+
+  FOREIGN KEY (journalISSN ) REFERENCES Journal(ISSN)
+  );
+```
+
+  histKey INTEGER primary key AUTOINCREMENT,
+  
+  use compound key instead?
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS History (
+
+  PMID int(255),
+  pubStatus varchar(255),
+  year int(255),
+  month int(255),
+  day int(255),
+  PRIMARY  KEY (PMID, pubStatus),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID)
+  );
+```
+
+adding in this lookup table
+might need compound primary key?
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Authorship (
+  lookupKey INTEGER primary key AUTOINCREMENT,
+  PMID int(255),
+  lastName varchar(255),
+  foreName varchar(255),
+  FOREIGN KEY (PMID) REFERENCES Article(PMID),
+  FOREIGN KEY (lastName, foreName) REFERENCES Author(lastName, foreName)
+  );
+```
+
+  PMID int(255),
+  
+  ,
+  FOREIGN KEY (PMID) REFERENCES Article(PMID)
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS Author (
+  authorKey INTEGER primary key AUTOINCREMENT,
+
+  lastName varchar(255),
+  foreName varchar(255),
+  initials varchar(255),
+  affiliation varchar(255)
+  );
+```
+
+
+Inserting data into the tables. Will likely need to be adjusted 
+
+```{r}
+dbWriteTable(dbs, "journalData",newJournal.df )
+```
+```{sql connection=dbs}
+
+SELECT distinct 
+ISSN,journalTitle,ISOabbrevation from journalData 
+```
+
+```{sql connection=dbs}
+INSERT INTO Journal (ISSN , title,ISOabbrevation)
+SELECT  distinct ISSN, journalTitle, ISOabbrevation
+FROM journalData
+
+
+```
+```{sql connection=dbs}
+
+SELECT ISOabbrevation from Journal limit 5
+```
+```{sql connection=dbs}
+DROP TABLE journalData
+```
+
+
+```{r}
+dbWriteTable(dbs, "articleData",newArticle.df )
+```
+```{sql connection=dbs}
+
+SELECT distinct PMID from articleData
+```
+
+
+Remove year/ month/day?
+, year,month,day
+, artYear,artMonth,artDay
+```{sql connection=dbs}
+INSERT INTO Article (PMID , journalISSN, title, pagination,language)
+SELECT  PMID, journalISSN, articleTitle, pagination,language
+FROM articleData
+
+
+```
+
+```{sql connection=dbs}
+
+SELECT * from Article limit 5
+```
+
+```{sql connection=dbs}
+DROP TABLE articleData
+```
+
+
+
+```{r}
+dbWriteTable(dbs, "histData",newHistory.df )
+```
+
+```{sql connection=dbs}
+
+SELECT  distinct * from histData  where pubStatus = "pubmed" 
+```
+
+```{sql connection=dbs}
+INSERT INTO History (PMID , pubStatus, year, month,day)
+SELECT  PMID , pubStatus, year, month,day
+FROM histData
+
+
+```
+
+```{sql connection=dbs}
+
+SELECT * from History limit 5
+```
+
+```{sql connection=dbs}
+DROP TABLE histData
+```
+
+
+```{r}
+dbWriteTable(dbs, "authorData",newAuthor.df )
+```
+
+```{sql connection=dbs}
+
+SELECT  * from authorData
+```
+
+PMID ,
+PMID ,
+```{sql connection=dbs}
+INSERT INTO Author ( lastName, foreName, initials,affiliation)
+SELECT   lastName, foreName, initials,affiliation
+FROM authorData
+
+
+```
+```{sql connection=dbs}
+
+SELECT distinct * from Author limit 5
+```
+
+Initials is not included in the keys for Authorship because it dosent impact the results. 84 unique first and last name pairs, and 84 first, last and initial pairs.
+```{sql connection=dbs}
+INSERT INTO Authorship ( PMID, lastName, foreName)
+SELECT   PMID, lastName, foreName
+FROM authorData
+
+
+```
+
+
+```{sql connection=dbs}
+
+SELECT * from Authorship limit 5
+```
+
+
+```{sql connection=dbs}
+DROP TABLE authorData
+```
+
+
+
+
+
+
+
+### Part 2
+
+
+
+## Creae new and db Star schema
+```{r}
+pub <- dbConnect(RSQLite::SQLite(), "pubMedStar.db")
+```
+
+```{sql connection=dbs}
+
+--use to clear tables
+DROP TABLE IF EXISTS author;")
+DROP TABLE IF EXISTS authorArticle;")
+DROP TABLE IF EXISTS article;")
+DROP TABLE IF EXISTS articleJournal;")
+DROP TABLE IF EXISTS history;
+
+```
+
+```{sql connection=dbs}
+
+SELECT  * from History
+```
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS historyDimension (historyDimID INTEGER PRIMARY KEY autoincrement, 
+  historyDimId INTEGER,
+  pubStatus TEXT,
+  historyDate TEXT,
+  historyTime TEXT,
+  historyMonth INTEGER,
+  historyDay INTEGER,
+  historyQuarter INTEGER);
+
+```
+
+
+
+## Using original table to get 
+```{sql connection=dbs}
+
+INSERT INTO historyDimension(historyDimId, pubStatus, historyDate, historyTime, historyMonth, historyDay, historyQuarter)
+SELECT History.PMID AS historyDimId,
+ History.pubStatus AS pubStatus,
+ History.month || "-" || History.day || "-" || History.year AS date,
+ History.month as historyMonth,
+ History.day as historyDay,
+  CASE
+    WHEN History.month BETWEEN 1 AND 3 THEN 1
+    WHEN History.month BETWEEN 4 AND 6 THEN 2
+    WHEN History.month BETWEEN 7 AND 9 THEN 3
+    WHEN History.month Between 10 AND 12 THEN 4
+  END
+  FROM History
+
+```
+
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS article(
+                pmID INT NOT NULL, 
+                dateTimeID INT Not NULL, 
+                authorID INT NOT NULL,
+                pubJournalID INT,
+                FOREIGN KEY (dateTimeID) references dateTime(dateTimeID) 
+                FOREIGN KEY (authorID) references author(authorID) 
+                FOREIGN KEY (pubJournalID) references journal(journalID)
+                FOREIGN KEY (pmID, authorID));
+```
+
+
+```{sql connection=dbs}
+CREATE TABLE IF NOT EXISTS articleData(
+                pmID INT not null, 
+                doi TEXT NULL,
+                abstract TEXT NULL, 
+                articleTitle TEXT NULL, 
+                pubModel TEXT null, 
+                pubYear TEXT null, 
+                pubMonth TEXT null,
+                primary key (pmID));
+
+```
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS author(
+                authorId NOT NULL, 
+                lastName TEXT NULL, 
+                foreName Text NULL, 
+                affiliation text NULL, 
+                PRIMARY KEY(authorID));
+
+```
+
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS articleJournal(
+                journalID INT not null PRIMARY KEY,
+                volume INT null, 
+                issue INT null, 
+                medLinePGN INT NULL);
+
+```
+
+
+```{sql connection=dbs}
+
+create table if not exists journalInfo(
+                journalId INT NOT NULL,
+                issn TEXT not null,
+                issnType TEXT NULL,
+                journal text NULL, 
+                primary key (journalId));
+
+```
+
+
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS dateTime(
+                dateTimeID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                quarter TEXT NULL, 
+                year INT NULL);
+
+
+
+```
+
+```{sql connection=dbs}
+
+CREATE TABLE IF NOT EXISTS articleFact(
+                pmID INT NOT NULL
+                pubJournalID INT NOT NULL,
+                numAuthors INT, 
+                season TEXT);
 
 ```
 
 
 ```{r}
-#dateCompleted -  MedlineCitation's second child node/tag
-yearCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Year", xmlValue)
-yearCompleted
-monthCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted//Month", xmlValue)
-monthCompleted
-dayCompleted <- lapply(nodes, xpathSApply, ".//MedlineCitation/DateCompleted/Day", xmlValue)
-dayCompleted
-
-dateComp <- mapply(paste, yearCompleted, monthCompleted, dayCompleted, collapse = "")
-dateComp
+#attach newly created star schema
+dbSendStatement(pub, "ATTACH DATABASE 'pubMedStar';")
 
 ```
+
 
 
 
@@ -141,6 +710,8 @@ dbDisconnect(dbs)
 
 
 ### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining
+
+
 
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
