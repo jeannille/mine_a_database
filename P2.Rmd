@@ -384,8 +384,7 @@ CREATE TABLE IF NOT EXISTS History (
   );
 ```
 
-adding in this lookup table
-might need compound primary key?
+
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Authorship (
   lookupKey INTEGER primary key AUTOINCREMENT,
@@ -416,8 +415,9 @@ CREATE TABLE IF NOT EXISTS Author (
 Inserting data into the tables. Will likely need to be adjusted 
 
 ```{r}
-dbWriteTable(dbs, "journalData",newJournal.df )
+dbWriteTable(dbs, "journalData", newJournal.df )
 ```
+
 ```{sql connection=dbs}
 
 SELECT distinct 
@@ -429,12 +429,13 @@ INSERT INTO Journal (ISSN , title,ISOabbrevation)
 SELECT  distinct ISSN, journalTitle, ISOabbrevation
 FROM journalData
 
-
 ```
+
 ```{sql connection=dbs}
 
 SELECT ISOabbrevation from Journal limit 5
 ```
+
 ```{sql connection=dbs}
 DROP TABLE journalData
 ```
@@ -443,6 +444,7 @@ DROP TABLE journalData
 ```{r}
 dbWriteTable(dbs, "articleData",newArticle.df )
 ```
+
 ```{sql connection=dbs}
 
 SELECT distinct PMID from articleData
@@ -456,13 +458,13 @@ Remove year/ month/day?
 INSERT INTO Article (PMID , journalISSN, title, pagination,language)
 SELECT  PMID, journalISSN, articleTitle, pagination,language
 FROM articleData
-
-
 ```
+
 ```{sql connection=dbs}
 
 SELECT * from Article limit 5
 ```
+
 ```{sql connection=dbs}
 DROP TABLE articleData
 ```
@@ -482,12 +484,13 @@ INSERT INTO History (PMID , pubStatus, year, month,day)
 SELECT  PMID , pubStatus, year, month,day
 FROM histData
 
-
 ```
+
 ```{sql connection=dbs}
 
 SELECT * from History limit 5
 ```
+
 ```{sql connection=dbs}
 DROP TABLE histData
 ```
@@ -521,8 +524,9 @@ INSERT INTO Authorship ( PMID, lastName, foreName)
 SELECT   PMID, lastName, foreName
 FROM authorData
 
-
 ```
+
+
 ```{sql connection=dbs}
 
 SELECT * from Authorship limit 5

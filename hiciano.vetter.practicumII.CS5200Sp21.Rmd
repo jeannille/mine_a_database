@@ -3,10 +3,6 @@ title: "Practicum II - Mine a Database, CS5200 Spring 2021"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
 
 ### Part 1 Load XML: Create a normalized relational OLTP database
 ```{r}
@@ -17,8 +13,6 @@ pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse)
 dbs <- dbConnect(RSQLite::SQLite(), "pubMed.db")
 
 ```
-
-
 
 ### Part 1 Populate relational database with data from an XML document
 ### Part 2 Add to the normalized schema fact tables and turn the normalized schema into a denormalized schema suitable for OLAP
@@ -307,37 +301,40 @@ for (m in 1:19)
 }
   
 ```
+
+
 ```{r}
 #commented out so not seen in a knitted file
-#newHistory.df
+newHistory.df
 ```
 
 
 
-
-
-Tables are created here
+Clear tables as needed
 
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Journal
 ```
+
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Article
 ```
+
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Authorship
 ```
+
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS Author
 ```
+
 ```{sql connection=dbs}
 DROP TABLE IF EXISTS History
+
 ```
 
-```{r}
-dbListTables(dbs)
-```
 
+Create tables from ERD
 
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Journal (
@@ -348,21 +345,14 @@ CREATE TABLE IF NOT EXISTS Journal (
   );
 ```
 
-articleKey INTEGER primary key AUTOINCREMENT,
-
-  year int(255),
-  month int(255),
-  day int(255),
+  
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Article (
-  
   PMID int(255) NOT NULL,
   journalISSN varchar(255),
   title varchar(255),
   pagination varchar(255),
   language varchar(255),
-
-
   FOREIGN KEY (journalISSN ) REFERENCES Journal(ISSN)
   );
 ```
@@ -370,9 +360,10 @@ CREATE TABLE IF NOT EXISTS Article (
   histKey INTEGER primary key AUTOINCREMENT,
   
   use compound key instead?
+  
+
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS History (
-
   PMID int(255),
   pubStatus varchar(255),
   year int(255),
@@ -403,7 +394,6 @@ CREATE TABLE IF NOT EXISTS Authorship (
 ```{sql connection=dbs}
 CREATE TABLE IF NOT EXISTS Author (
   authorKey INTEGER primary key AUTOINCREMENT,
-
   lastName varchar(255),
   foreName varchar(255),
   initials varchar(255),
@@ -412,28 +402,49 @@ CREATE TABLE IF NOT EXISTS Author (
 ```
 
 
-Inserting data into the tables. Will likely need to be adjusted 
+
+Check all tables have been correctly added to database
+```{r}
+dbListTables(dbs)
+
+```
+
+
+Inserting data (dataframe) into tables that have been created in pubMedData database
 
 ```{r}
-dbWriteTable(dbs, "journalData",newJournal.df )
+dbWriteTable(dbs, "journalData",newJournal.df , overwrite = TRUE)
 ```
+
 ```{sql connection=dbs}
 
-SELECT distinct 
+SELECT DISTINCT 
 ISSN,journalTitle,ISOabbrevation from journalData 
 ```
 
+Insert journal data - filter by distinct journals 
 ```{sql connection=dbs}
 INSERT INTO Journal (ISSN , title,ISOabbrevation)
 SELECT  distinct ISSN, journalTitle, ISOabbrevation
 FROM journalData
-
-
 ```
+
+
 ```{sql connection=dbs}
 
-SELECT ISOabbrevation from Journal limit 5
+SELECT * from journal LIMIT 10;
+
 ```
+
+```{sql connection=dbs}
+
+--SELECT COUNT(*) from journal;
+
+SELECT * from journalData;
+```
+
+
+
 ```{sql connection=dbs}
 DROP TABLE journalData
 ```
@@ -442,6 +453,9 @@ DROP TABLE journalData
 ```{r}
 dbWriteTable(dbs, "articleData",newArticle.df )
 ```
+
+
+
 ```{sql connection=dbs}
 
 SELECT distinct PMID from articleData
@@ -461,7 +475,7 @@ FROM articleData
 
 ```{sql connection=dbs}
 
-SELECT * from Article limit 5
+SELECT * from Article 
 ```
 
 ```{sql connection=dbs}
@@ -471,12 +485,13 @@ DROP TABLE articleData
 
 
 ```{r}
-dbWriteTable(dbs, "histData",newHistory.df )
+dbWriteTable(dbs, "histData",newHistory.df , overwrite = TRUE)
 ```
 
+History information for the 19 published articles, use year-month-date form this table for star schema
 ```{sql connection=dbs}
 
-SELECT  distinct * from histData  where pubStatus = "pubmed" 
+SELECT  DiSTINCT * FROM histData  WHERE pubStatus = "pubmed" 
 ```
 
 ```{sql connection=dbs}
@@ -489,32 +504,28 @@ FROM histData
 
 ```{sql connection=dbs}
 
-SELECT * from History limit 5
+SELECT * from History
 ```
 
-```{sql connection=dbs}
-DROP TABLE histData
-```
 
 
 ```{r}
-dbWriteTable(dbs, "authorData",newAuthor.df )
+dbWriteTable(dbs, "authorData",newAuthor.df, overwrite = TRUE)
 ```
 
 ```{sql connection=dbs}
 
-SELECT  * from authorData
+SELECT* from authorData
 ```
 
-PMID ,
-PMID ,
+
 ```{sql connection=dbs}
 INSERT INTO Author ( lastName, foreName, initials,affiliation)
 SELECT   lastName, foreName, initials,affiliation
 FROM authorData
 
-
 ```
+
 ```{sql connection=dbs}
 
 SELECT distinct * from Author limit 5
@@ -541,56 +552,152 @@ DROP TABLE authorData
 ```
 
 
-
-
-
-
-
 ### Part 2
-
-
-
 ## Creae new and db Star schema
+
+
+
 ```{r}
-pub <- dbConnect(RSQLite::SQLite(), "pubMedStar.db")
+dbPub <- dbConnect(RSQLite::SQLite(), "pubMedStar.db")
 ```
 
-```{sql connection=dbs}
 
+
+```{sql connection=dbPub}
 --use to clear tables
-DROP TABLE IF EXISTS author;")
-DROP TABLE IF EXISTS authorArticle;")
-DROP TABLE IF EXISTS article;")
-DROP TABLE IF EXISTS articleJournal;")
-DROP TABLE IF EXISTS history;
+DROP TABLE IF EXISTS dimAuthor;
+```
+
+
+```{sql connection=dbPub}
+DROP TABLE IF EXISTS dimPubDate;
+```
+
+```{sql connection=dbPub}
+DROP TABLE IF EXISTS dimJournal;
+```
+
+```{sql connection=dbPub}
+DROP TABLE IF EXISTS dimHistory;
+```
+
+```{sql connection=dbPub}
+DROP TABLE IF EXISTS articleFact;
 
 ```
 
-```{sql connection=dbs}
 
-SELECT  * from History
+
+## realize star schema tables
+
+```{sql connection=dbPub}
+CREATE TABLE IF NOT EXISTS dimAuthor(
+  authorRef INTEGER NOT NULL, 
+ -- PMID INTEGER NOT NULL,
+  lastName TEXT NULL, 
+  foreName TEXT NULL, 
+  affiliation TEXT NULL, 
+  PRIMARY KEY(authorRef) 
+  );
+
 ```
 
+
+#pubMedDate col
+```{sql connection=dbPub}
+CREATE TABLE IF NOT EXISTS dimPubDate(
+  dateRef INTEGER,
+  year INTEGER NULL,
+  month INTEGER NULL,
+  day INTEGER NULL,
+  quarter INTEGER NULL,
+  PRIMARY KEY (dateRef)
+  );
+
+```
+
+
+```{sql connection=dbPub}
+
+CREATE TABLE IF NOT EXISTS dimJournal(
+  journalRef INTEGER NOT NULL,
+  issn TEXT NOT NULL,
+  volume TEXT NULL,
+  issue TEXT NULL,
+  PRIMARY KEY (journalId)
+  );
+
+```
+
+
+may need to add pubStatus later
+```{sql connection=dbPub}
+
+CREATE TABLE IF NOT EXISTS dimHistory(
+  historyRef INTEGER, 
+  dateCreated INTEGER,
+  PRIMARY KEY (historyRef)
+  );
+
+```
+
+
+compound key - (pmid, authorRef) connect author to specific article
+```{sql connection=dbPub}
+
+CREATE TABLE IF NOT EXISTS articleFact(
+  PMID INTEGER NOT NULL,
+  authorRef INTEGER NOT NULL, 
+  journalRef INTEGER NOT NULL,
+  dateRef INTEGER NOT NULL,
+  historyRef INTEGER NOT NULL,
+  FOREIGN KEY (authorRef) REFERENCES dimAuthor(authorRef),
+  FOREIGN KEY (journalRef) REFERENCES dimJournal(journalRef), 
+  FOREIGN KEY (dateRef) REFERENCES dimPubDate(dateRef),
+  FOREIGN KEY (historyRef) REFERENCES dimHistory(historyRef),
+  PRIMARY KEY (PMID, authorRef)
+);
+
+```
+
+
+```{r}
+dbListTables(dbPub)
+dbListTables(dbs)
+```
+
+
+
+
 ```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS historyDimension (historyDimID INTEGER PRIMARY KEY autoincrement, 
-  historyDimId INTEGER,
-  pubStatus TEXT,
-  historyDate TEXT,
-  historyTime TEXT,
-  historyMonth INTEGER,
-  historyDay INTEGER,
-  historyQuarter INTEGER);
+
+SELECT * From Author;
+```
+
+Attach databases
+https://www.sqlite.org/lang_attach.html 
+https://www.tutorialspoint.com/sqlite/sqlite_attach_database.htm 
+Insert info into star schema db from above nf db
+
+```{sql connection=dbPub}
+ATTACH DATABASE 'pubMedStar.db' AS s;
+```
+
+
+```{sql connection=dbPub}
+ATTACH DATABASE 'pubMed.db' AS p;
+
+INSERT INTO s.dimAuthor SELECT authorKey as authorRef, lastName, foreName, initials, affiliation FROM p.Author ;
+
 
 ```
 
 
 
 ## Using original table to get 
-```{sql connection=dbs}
-
-INSERT INTO historyDimension(historyDimId, pubStatus, historyDate, historyTime, historyMonth, historyDay, historyQuarter)
-SELECT History.PMID AS historyDimId,
- History.pubStatus AS pubStatus,
+```{sql connection=dbPub}
+UPDATE dimPubDate(dateRef, year, month, day, quarter)
+SELECT History AS historyDimId,
  History.month || "-" || History.day || "-" || History.year AS date,
  History.month as historyMonth,
  History.day as historyDay,
@@ -601,101 +708,6 @@ SELECT History.PMID AS historyDimId,
     WHEN History.month Between 10 AND 12 THEN 4
   END
   FROM History
-
-```
-
-
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS article(
-                pmID INT NOT NULL, 
-                dateTimeID INT Not NULL, 
-                authorID INT NOT NULL,
-                pubJournalID INT,
-                FOREIGN KEY (dateTimeID) references dateTime(dateTimeID) 
-                FOREIGN KEY (authorID) references author(authorID) 
-                FOREIGN KEY (pubJournalID) references journal(journalID)
-                FOREIGN KEY (pmID, authorID));
-```
-
-
-```{sql connection=dbs}
-CREATE TABLE IF NOT EXISTS articleData(
-                pmID INT not null, 
-                doi TEXT NULL,
-                abstract TEXT NULL, 
-                articleTitle TEXT NULL, 
-                pubModel TEXT null, 
-                pubYear TEXT null, 
-                pubMonth TEXT null,
-                primary key (pmID));
-
-```
-
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS author(
-                authorId NOT NULL, 
-                lastName TEXT NULL, 
-                foreName Text NULL, 
-                affiliation text NULL, 
-                PRIMARY KEY(authorID));
-
-```
-
-
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS articleJournal(
-                journalID INT not null PRIMARY KEY,
-                volume INT null, 
-                issue INT null, 
-                medLinePGN INT NULL);
-
-```
-
-
-```{sql connection=dbs}
-
-create table if not exists journalInfo(
-                journalId INT NOT NULL,
-                issn TEXT not null,
-                issnType TEXT NULL,
-                journal text NULL, 
-                primary key (journalId));
-
-```
-
-
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS dateTime(
-                dateTimeID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                quarter TEXT NULL, 
-                year INT NULL);
-
-
-
-```
-
-```{sql connection=dbs}
-
-CREATE TABLE IF NOT EXISTS articleFact(
-                pmID INT NOT NULL
-                pubJournalID INT NOT NULL,
-                numAuthors INT, 
-                season TEXT);
-
-```
-
-
-```{r}
-#attach newly created star schema
-dbSendStatement(pub, "ATTACH DATABASE 'pubMedStar';")
 
 ```
 
