@@ -639,7 +639,7 @@ CREATE TABLE IF NOT EXISTS dimHistory(
   PMID INTEGER NULL,
   pubStatus INTEGER NULL,
   datePublished TEXT,
-  quarter INTEGER NULL,
+  quarter INTEGER NULL
   );
 
 ```
@@ -760,9 +760,9 @@ create temp table to text parsing pub date
 Saves the resulting table query regular database into a datafram in R, which will be used to write to dimHistory
 ```{sql connection=dbs, output.var="df_dimHistory"}
 
-SELECT History.pubStatus AS pubStatus,
-  History.PMID AS PMID,
- History.day || "-" || History.month || "-" || History.year AS datePublished,
+SELECT History.PMID AS PMID,
+  History.pubStatus AS pubStatus,
+  History.day || "-" || History.month || "-" || History.year AS datePublished,
   CASE
     WHEN History.month BETWEEN 1 AND 3 THEN 1
     WHEN History.month BETWEEN 4 AND 6 THEN 2
@@ -770,7 +770,6 @@ SELECT History.pubStatus AS pubStatus,
     WHEN History.month Between 10 AND 12 THEN 4
   END AS quarter
   FROM History
-  
 
 ```
 
@@ -848,8 +847,8 @@ dbReadTable( star.dbs, "dimHistory")
 
 
 ```{r}
-
-dfTest
+#check if day-month translated to date 
+head(dfTest)
 ```
 
 
