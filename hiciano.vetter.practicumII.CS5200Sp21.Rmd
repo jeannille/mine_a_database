@@ -635,12 +635,11 @@ may need to add pubStatus later
 ```{sql connection=star.dbs}
 
 CREATE TABLE IF NOT EXISTS dimHistory(
-  historyRef INTEGER AUTO_INCREMENT,
+  historyRef INTEGER PRIMARY KEY AUTOINCREMENT,
+  PMID INTEGER NULL,
+  pubStatus INTEGER NULL,
   datePublished TEXT,
   quarter INTEGER NULL,
-  pubStatus INTEGER NULL,
-  PMID INTEGER NULL,
-  PRIMARY KEY (historyRef) 
   );
 
 ```
@@ -764,17 +763,27 @@ Saves the resulting table query regular database into a datafram in R, which wil
 SELECT History.pubStatus AS pubStatus,
   History.PMID AS PMID,
  History.day || "-" || History.month || "-" || History.year AS datePublished,
- History.month as quarter,
   CASE
     WHEN History.month BETWEEN 1 AND 3 THEN 1
     WHEN History.month BETWEEN 4 AND 6 THEN 2
     WHEN History.month BETWEEN 7 AND 9 THEN 3
     WHEN History.month Between 10 AND 12 THEN 4
-  END
+  END AS quarter
   FROM History
   
 
 ```
+
+```{sql connection=}
+
+```
+
+
+
+```{r}
+df_dimHistory
+```
+
 
 
 testing will delete
@@ -816,6 +825,7 @@ date1 <- data.frame(dfTest$date)
 #date1 <- parse_date(date1, format = "%d-/%m-/%Y")
 PMID <- df_dimHistory$PMID
 quarter <- df_dimHistory$quarter
+quarter
 
 df_pubDateStar <- data.frame(cbind(date1,quarter,pubstatus,PMID))
 df_pubDateStar
@@ -848,7 +858,7 @@ In the same schema as the previous step, create and populate a summary fact tabl
 Create query that sorts by quarter - get from star schema
 ```{r}
 
-sqlCmd = ""
+sqlCmd = "SELECT * FROM dimHistory "
 dbGetQuery(star.dbs, sqlCmd)
 
 ```
