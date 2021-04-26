@@ -7,10 +7,11 @@ output: html_notebook
 ### Part 1 Load XML: Create a normalized relational OLTP database
 ```{r}
 #pacman (package manager) installs and loads packages if not installed
-pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse)
+pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse, dplyr)
+install.packages("dplyr") 
 
 #create db to set schema and load data to
-dbs <- dbConnect(RSQLite::SQLite(), "pubMed.db")
+dbs <- dbConnect(RSQLite::SQLite(), "pubMed0.db")
 
 ```
 
@@ -176,7 +177,7 @@ for (m in 1:19)
 ```
 ```{r}
 #commented out so not seen in a knitted file
-#newArticle.df
+newArticle.df
 ```
 
 ```{r}
@@ -422,11 +423,12 @@ SELECT DISTINCT
 ISSN,journalTitle,ISOabbrevation from journalData 
 ```
 
-Insert journal data - filter by distinct journals 
 ```{sql connection=dbs}
-INSERT INTO Journal (ISSN , title,ISOabbrevation)
-SELECT  distinct ISSN, journalTitle, ISOabbrevation
-FROM journalData
+INSERT INTO Journal(ISSN , title,ISOabbrevation)
+SELECT DISTINCT 
+ISSN,journalTitle,ISOabbrevation from journalData 
+
+
 ```
 
 
@@ -439,21 +441,19 @@ SELECT * from journal LIMIT 10;
 ```{sql connection=dbs}
 
 --SELECT COUNT(*) from journal;
-
-SELECT * from journalData;
+SELECT * from journal;
 ```
 
 
-
+Drop temporary table for Journal
 ```{sql connection=dbs}
 DROP TABLE journalData
 ```
 
-
+write article df to database
 ```{r}
 dbWriteTable(dbs, "articleData",newArticle.df )
 ```
-
 
 
 ```{sql connection=dbs}
@@ -475,7 +475,7 @@ FROM articleData
 
 ```{sql connection=dbs}
 
-SELECT * from Article 
+SELECT * from Article LIMIT 10
 ```
 
 ```{sql connection=dbs}
@@ -504,14 +504,15 @@ FROM histData
 
 ```{sql connection=dbs}
 
-SELECT * from History
+SELECT * from History LIMIT 10
 ```
-
 
 
 ```{r}
 dbWriteTable(dbs, "authorData",newAuthor.df, overwrite = TRUE)
 ```
+
+
 
 ```{sql connection=dbs}
 
@@ -526,24 +527,24 @@ FROM authorData
 
 ```
 
+
 ```{sql connection=dbs}
 
-SELECT distinct * from Author limit 5
+SELECT distinct * from Author limit 10
 ```
+
 
 Initials is not included in the keys for Authorship because it dosent impact the results. 84 unique first and last name pairs, and 84 first, last and initial pairs.
 ```{sql connection=dbs}
 INSERT INTO Authorship ( PMID, lastName, foreName)
 SELECT   PMID, lastName, foreName
 FROM authorData
-
-
 ```
 
 
 ```{sql connection=dbs}
 
-SELECT * from Authorship limit 5
+SELECT * from Authorship LIMIT 10
 ```
 
 
@@ -558,92 +559,95 @@ DROP TABLE authorData
 
 
 ```{r}
-dbPub <- dbConnect(RSQLite::SQLite(), "pubMedStar.db")
+star.dbs <- dbConnect(RSQLite::SQLite(), "pubMedStar0.db")
 ```
 
 
 
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 --use to clear tables
 DROP TABLE IF EXISTS dimAuthor;
 ```
 
 
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 DROP TABLE IF EXISTS dimPubDate;
 ```
 
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 DROP TABLE IF EXISTS dimJournal;
 ```
 
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 DROP TABLE IF EXISTS dimHistory;
 ```
 
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 DROP TABLE IF EXISTS articleFact;
 
 ```
 
 
-
 ## realize star schema tables
 
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 CREATE TABLE IF NOT EXISTS dimAuthor(
   authorRef INTEGER NOT NULL, 
  -- PMID INTEGER NOT NULL,
   lastName TEXT NULL, 
   foreName TEXT NULL, 
+  initials TEXT NULL,
   affiliation TEXT NULL, 
   PRIMARY KEY(authorRef) 
   );
 
 ```
 
-
 #pubMedDate col
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 CREATE TABLE IF NOT EXISTS dimPubDate(
   dateRef INTEGER,
   year INTEGER NULL,
-  month INTEGER NULL,
   day INTEGER NULL,
-  quarter INTEGER NULL,
   PRIMARY KEY (dateRef)
   );
 
 ```
 
 
-```{sql connection=dbPub}
+update this to assocate with every article (even if multiple articles published to same journal, dimension table
+should be in context of specific article, center table?, or could just grab from article itself)
+```{sql connection=star.dbs}
 
 CREATE TABLE IF NOT EXISTS dimJournal(
   journalRef INTEGER NOT NULL,
-  issn TEXT NOT NULL,
-  volume TEXT NULL,
-  issue TEXT NULL,
-  PRIMARY KEY (journalId)
+  ISSN TEXT NOT NULL,
+  title TEXT NULL,
+  --volume TEXT NULL,
+  --issue TEXT NULL,
+  PRIMARY KEY (journalRef)
   );
 
 ```
 
 
 may need to add pubStatus later
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 
 CREATE TABLE IF NOT EXISTS dimHistory(
-  historyRef INTEGER, 
-  dateCreated INTEGER,
-  PRIMARY KEY (historyRef)
+  historyRef INTEGER AUTO_INCREMENT,
+  datePublished TEXT,
+  quarter INTEGER NULL,
+  pubStatus INTEGER NULL,
+  PMID INTEGER NULL,
+  PRIMARY KEY (historyRef) 
   );
 
 ```
 
 
 compound key - (pmid, authorRef) connect author to specific article
-```{sql connection=dbPub}
+```{sql connection=star.dbs}
 
 CREATE TABLE IF NOT EXISTS articleFact(
   PMID INTEGER NOT NULL,
@@ -661,46 +665,123 @@ CREATE TABLE IF NOT EXISTS articleFact(
 ```
 
 
+
 ```{r}
-dbListTables(dbPub)
+dbListTables(star.dbs)
 dbListTables(dbs)
 ```
 
 
+Purpose of star schema is to have eaisly accessible look up tables (LinkedIn learning) - Context tables 
+Part 2. Populate Star Schema tables using populated OLTP database. 
+First, update the dimension tables. Then we can use look up keys for these to  populate 
+
+Create temp (star schema) data frames from dbs database using queries to populate Star Schema tables
+
+```{r}
+
+#dbs <- dbConnect(RSQLite::SQLite(), "pubMed0.db")
+#query database to get author
+#dbSendQuery(dbs, "SELECT * FROM Author LIMIT 10")
+
+sqlCmd = "SELECT authorKey FROM Author"
+authorRef = dbGetQuery(dbs, sqlCmd)
+authorRef 
+
+sqlCmd = "SELECT foreName FROM Author"
+foreName = dbGetQuery(dbs, sqlCmd)
+#foreName
+
+sqlCmd = "SELECT lastName FROM Author"
+lastName = dbGetQuery(dbs, sqlCmd)
+lastName
+ 
+sqlCmd = "SELECT initials FROM Author"
+initials = dbGetQuery(dbs, sqlCmd)
+initials
+
+sqlCmd = "SELECT affiliation  FROM Author"
+affiliation  = dbGetQuery(dbs, sqlCmd)
+affiliation 
+
+df_AuthorStar = data.frame(cbind(authorRef, foreName, lastName, initials, affiliation))
+df_AuthorStar
+
+head(df_AuthorStar)
+
+#headers of dataframe once collected cols from dbs
+names(df_AuthorStar)
+#rename authorKey for star schema table
+df_AuthorStar <- df_AuthorStar %>% rename(authorRef = authorKey)
+#names(df_AuthorStar)
+
+```
+
+Populate Star schema tables 
+```{r}
+#star.dbs <- dbConnect(RSQLite::SQLite(), "pubMedStar0.db")
+
+dbWriteTable( star.dbs, "dimAuthor", df_AuthorStar, field.types = NULL, row.names = FALSE, 
+              overwrite = FALSE, append = TRUE, allow.keywords = FALSE )
+
+dbReadTable( star.dbs, "dimAuthor")
+
+#dbListTables(star.dbs)
+```
 
 
+
+```{r}
+issn = dbGetQuery(dbs, "SELECT ISSN FROM JOURNAL")
+#issn
+
+journalTitle = dbGetQuery(dbs, "SELECT TITLE FROM JOURNAL")
+#journalTitle
+
+df_Journal = cbind(issn,journalTitle)
+head(df_Journal)
+
+dbWriteTable( star.dbs, "dimJournal", df_Journal, field.types = NULL, row.names = FALSE, 
+              overwrite = FALSE, append = TRUE, allow.keywords = FALSE )
+
+dbReadTable( star.dbs, "dimJournal")
+
+dbListTables(star.dbs)
+```
+
+
+```{sql connection=star.dbs}
+
+SELECT * FROM dimJournal LIMIT 10;
+
+```
+
+
+create temp table to text parsing pub date
+Saves the resulting table query regular database into a datafram in R, which will be used to write to dimHistory
+```{sql connection=dbs, output.var="df_dimHistory"}
+
+SELECT History.pubStatus AS pubStatus,
+  History.PMID AS PMID,
+ History.day || "-" || History.month || "-" || History.year AS datePublished,
+ History.month as quarter,
+  CASE
+    WHEN History.month BETWEEN 1 AND 3 THEN 1
+    WHEN History.month BETWEEN 4 AND 6 THEN 2
+    WHEN History.month BETWEEN 7 AND 9 THEN 3
+    WHEN History.month Between 10 AND 12 THEN 4
+  END
+  FROM History
+  
+
+```
+
+
+testing will delete
 ```{sql connection=dbs}
 
-SELECT * From Author;
-```
-
-Attach databases
-https://www.sqlite.org/lang_attach.html 
-https://www.tutorialspoint.com/sqlite/sqlite_attach_database.htm 
-Insert info into star schema db from above nf db
-
-```{sql connection=dbPub}
-ATTACH DATABASE 'pubMedStar.db' AS s;
-```
-
-
-```{sql connection=dbPub}
-ATTACH DATABASE 'pubMed.db' AS p;
-
-INSERT INTO s.dimAuthor SELECT authorKey as authorRef, lastName, foreName, initials, affiliation FROM p.Author ;
-
-
-```
-
-
-
-## Using original table to get 
-```{sql connection=dbPub}
-UPDATE dimPubDate(dateRef, year, month, day, quarter)
-SELECT History AS historyDimId,
- History.month || "-" || History.day || "-" || History.year AS date,
- History.month as historyMonth,
- History.day as historyDay,
+SELECT
+ History.day || "-" || History.month || "-" || History.year AS date1,
   CASE
     WHEN History.month BETWEEN 1 AND 3 THEN 1
     WHEN History.month BETWEEN 4 AND 6 THEN 2
@@ -710,13 +791,74 @@ SELECT History AS historyDimId,
   FROM History
 
 ```
+```{r}
 
+sqlCmd = "SELECT day FROM History"
+Day0 = dbGetQuery(dbs, sqlCmd)
+Day0
+
+sqlCmd = "SELECT month FROM History"
+Month0 = dbGetQuery(dbs, sqlCmd)
+Month0
+
+sqlCmd = "SELECT year FROM History"
+Year0 = dbGetQuery(dbs, sqlCmd)
+
+sqlCmd = "SELECT pubStatus FROM History"
+pubstatus = dbGetQuery(dbs, sqlCmd)
+
+dfTest<-cbind(Day0,Month0,Year0, stringsAsFactors = FALSE)
+
+dfTest$date <- paste(dfTest$day,dfTest$month,dfTest$year, sep = '-')
+date1 <- data.frame(dfTest$date)
+
+#date1 =as.character(date1)
+#date1 <- parse_date(date1, format = "%d-/%m-/%Y")
+PMID <- df_dimHistory$PMID
+quarter <- df_dimHistory$quarter
+
+df_pubDateStar <- data.frame(cbind(date1,quarter,pubstatus,PMID))
+df_pubDateStar
+
+#convert date columsn into one to date format for quarter
+names(df_pubDateStar)
+
+#df_pubDateStar <- df_pubDateStar %>% rename(pubstatus = pubStatus)
+df_pubDateStar <- df_pubDateStar %>% rename(datePublished = dfTest.date)
+
+head(df_pubDateStar)
+
+dbWriteTable( star.dbs, "dimHistory", df_pubDateStar, field.types = NULL, row.names = FALSE, 
+               overwrite = FALSE, append = TRUE, allow.keywords = FALSE )
+# 
+dbReadTable( star.dbs, "dimHistory")
+
+
+```
+
+
+```{r}
+
+dfTest
+```
+
+
+In the same schema as the previous step, create and populate a summary fact table that represents number of articles per time period (quarter, year) by author and by journal. Include the image of an updated ERD that contains the fact table. Populate the fact table in R. When building the schema, look a head to Part 3 as the schema is dependent on the eventual OLAP queries.
+
+Create query that sorts by quarter - get from star schema
+```{r}
+
+sqlCmd = ""
+dbGetQuery(star.dbs, sqlCmd)
+
+```
 
 
 
 ```{r}
 
 dbDisconnect(dbs)
+dbDisconnect(star.dbs)
 
 ```
 
