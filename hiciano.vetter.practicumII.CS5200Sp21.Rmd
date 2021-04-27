@@ -7,12 +7,18 @@ output: html_notebook
 ### Part 1 Load XML: Create a normalized relational OLTP database
 ```{r}
 #pacman (package manager) installs and loads packages if not installed
-pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse, dplyr)
+pacman::p_load(pacman, RSQLite, XML, DBI, tidyverse, dplyr, knitr)
 install.packages("dplyr") 
 
 #create db to set schema and load data to
 dbs <- dbConnect(RSQLite::SQLite(), "pubMed0.db")
 
+```
+
+
+```{r}
+
+knitr::include_graphics('CS5200_Spring2021_Practicum II_ERD.png')
 ```
 
 ### Part 1 Populate relational database with data from an XML document
@@ -541,6 +547,13 @@ DROP TABLE authorData
 star.dbs <- dbConnect(RSQLite::SQLite(), "pubMedStar0.db")
 ```
 
+
+```{r}
+knitr::include_graphics('StarSchema Practicum II_ERD.png')
+```
+
+
+
 ```{sql connection=star.dbs}
 --use to clear tables at start
 DROP TABLE IF EXISTS dimAuthor;
@@ -655,8 +668,6 @@ CREATE TABLE IF NOT EXISTS numArticleSummary(
 ```
 
 
-
-
 ```{r}
 dbListTables(star.dbs)
 dbListTables(dbs)
@@ -677,23 +688,18 @@ Create temp (star schema) data frames from dbs database using queries to populat
 
 sqlCmd = "SELECT authorKey FROM Author"
 authorRef = dbGetQuery(dbs, sqlCmd)
-#authorRef 
 
 sqlCmd = "SELECT foreName FROM Author"
 foreName = dbGetQuery(dbs, sqlCmd)
-#foreName
 
 sqlCmd = "SELECT lastName FROM Author"
 lastName = dbGetQuery(dbs, sqlCmd)
-#lastName
  
 sqlCmd = "SELECT initials FROM Author"
 initials = dbGetQuery(dbs, sqlCmd)
-#initials
 
 sqlCmd = "SELECT affiliation  FROM Author"
 affiliation  = dbGetQuery(dbs, sqlCmd)
-#affiliation 
 
 df_AuthorStar = data.frame(cbind(authorRef, foreName, lastName, initials, affiliation))
 #df_AuthorStar
@@ -879,23 +885,7 @@ dbReadTable( star.dbs, "dimPubDate")
 ```
 
 
-
-
-Join dim tables to create and populate center fact table of star schema
-```{sql connection=star.dbs}
-INSERT INTO factArticle(authorRef, journalRef, dateRef, historyRef, PMID)
-SELECT dimPubDate.dateRef, dimAuthor.authorRef, dimJournal.journalRef, dimHistory.historyRef 
-FROM dimPubDate
-JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
-JOIN dimJournal ON factArticle.journalRef = dimJournal.journalRef
-JOIN dimHistory ON factArticle.historyRef = dimHistory.historyRef
-JOIN dimPubDate ON factArticle.dateRef = dimPubDate.dateRef
-
-
-```
-
-
-Populate Article Fact table for all 19 articles (will contain all facts queried from all its connected dimension tables) 
+Populate Article Fact table containing all information of 19 articles 
 ```{r}
 
 factPubDate <- dbGetQuery(star.dbs, "SELECT dateRef FROM dimPubDate GROUP BY PMID")
@@ -926,24 +916,26 @@ dbReadTable( star.dbs, "factArticle")
 In the same schema as the previous step, create and populate a summary fact table that represents number of articles per time period (quarter, year) by author and by journal. Include the image of an updated ERD that contains the fact table. Populate the fact table in R. When building the schema, look a head to Part 3 as the schema is dependent on the eventual OLAP queries.
 
 
-```{sql connection=star.dbs}
+```{sql connection=star.dbs, output.var="warehouse"}
 
---SELECT * FROM dimPubDate
-
-SELECT COUNT(factArticle.PMID) as numOfArticles, dimPubDate.quarter, year FROM factArticle 
+SELECT * FROM factArticle 
 JOIN dimPubDate ON dimPubDate.dateRef = factArticle.dateRef
-GROUP BY dimPubDate.quarter, dimPubDate.year;
---JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
---JOIN dimJournal ON factArticle.journalRef = dimJournal.journalRef
---JOIN dimHistory ON factArticle.historyRef = dimHistory.historyRef
-
+JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
+JOIN dimJournal ON factArticle.journalRef = dimJournal.journalRef
+JOIN dimHistory ON factArticle.historyRef = dimHistory.historyRef
 
 
 ```
 
 
+```{r}
+#check warehouse df result is as expected
+warehouse
+```
+
 
 Query for number of articles per quarter by joining dimension tables on Article fact table
+The ouput of this query stores in dataframe which is used for ggplot in Part 3. 
 ```{sql connection=star.dbs, output.var = articlesBySeason}
 
 SELECT COUNT(factArticle.PMID) as numberOfArticles, dimPubDate.quarter
@@ -955,6 +947,8 @@ GROUP BY dimPubDate.quarter;
 
 ```
 
+
+### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining 
 Articles summary including quarter, year, author, journal
 ```{sql connection=star.dbs}
 
@@ -967,61 +961,69 @@ JOIN dimPubDate ON factArticle.dateRef = dimPubDate.dateRef
 Seasonal Pattern - Articles published per Season (where quarter 1 is Spring, 2 = Summer, 3 = Fall, 4 = Winter)
 ```{r}
 
-viz <- ggplot(data = articlesBySeason, aes(x = quarter, y = numberOfArticles, group = 1 )) + geom_line( color = 'blue') + geom_point() + labs(title="Publications by Season", x="Season", y="Quantity of Articles")
+seasonPlot <- ggplot(data = articlesBySeason, aes(x = quarter, y = numberOfArticles, group = 1 )) + geom_line( color = 'blue') + geom_point() + labs(title="Publications by Season", x="Season", y="Quantity of Articles")
 
-viz
+seasonPlot
 
-# viz <- ggplot(data = newData, aes(x = strikeYear, y = numOfStrikes, group = 1)) +
-#   geom_point(aes(color=numOfStrikes), alpha=0.9) + geom_line() + 
-#   labs(title= "Birds Strikes Incidents by Year ", subtitle="Years 2000 - 2011", x= "Year", y="Number of Bird Strikes")
-
-
-#articlesBySeason
+#articlesBySeason dataframe is output saved from query on star schema database above
 
 ```
 
 
-Publication status (or activity) by season
-
+Publication statuses (or activity) by season
 
 ```{r}
-dbGetQuery(star.dbs, "SELECT * FROM factArticle 
-           JOIN GROUP BY pubStatus")
+dbGetQuery(star.dbs, "SELECT DISTINCT * FROM dimHistory 
+        JOIN dimPubDate ON dimPubDate.PMID = dimHistory.articleId
+        WHERE PMID = articleId
+        ")
+```
+
+Get list of unique Authors by lastName
+```{sql connection=star.dbs}
+
+SELECT DISTINCT lastName || ', ' || initials || ', ' || foreName AS authorName 
+FROM dimAuthor
+ORDER BY lastName
+
 ```
 
 
-
-Query that sorts by quarter - get from star schema
+Query that sorts published Article per Author and lists them in descending order
 ```{r}
 
-# (SELECT PMID, quarter FROM (SELECT * FROM dimHistory GROUP BY PMID)
-#numArticleSummary numOfArticles, auarter, year, month (summaryId auto)
-
-#subquery that groups by articles, resulting in 19 unique articles and their history
-to = " SELECT pmid, quarter FROM dimHistory
-GROUP BY PMID "
-
-sqlCmd = " SELECT quarter, COUNT(*) AS 'numOfarticles' FROM (SELECT pmid, quarter FROM dimPubDate
-GROUP BY PMID) GROUP BY quarter"
-#get mpid and quarter of each unique article
-
-
-byQuarter <- dbGetQuery(star.dbs, sqlCmd)
-byQuarter
-
-dbGetQuery(star.dbs, "SELECT * FROM dimPubDate")
-
-dbGetQuery(star.dbs, "SELECT * FROM factArticle JOIN dimPubDate ON dimPubDate.")
-
-# numOfArticles INTEGER NOT NULL,
-# quarter INTEGER,
-# year INTEGER, 
-# month INTEGER
-
+dbGetQuery(star.dbs, "SELECT lastName || ', ' || initials || ', ' || foreName AS authorName, 
+                        COUNT(*) FROM factArticle 
+                        JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
+                        GROUP BY authorName
+                        ORDER BY 2 DESC")
 
 ```
 
 
+Publication productivity by Month (Was there more progress towards publication during certain months of the year?)
+```{r}
+
+histPub <- dbGetQuery(star.dbs, "SELECT * from dimHistory")
+datePub <- dbGetQuery(star.dbs, "SELECT * from dimPubDate")
+
+statusesByDate<- cbind(histPub, datePub)
+pubMonths <- cbind(statusesByDate['pubStatus'], statusesByDate['month'])
+pubMonths <- as_tibble(pubMonths)
+
+byMonth = pubMonths %>% group_by(month) %>% summarise(pubStatus = n())
+byMonth
+
+```
+
+```{r}
+pubStatusMonth <- ggplot(data = byMonth, aes(x = month, y = pubStatus, group = 1 )) + geom_line( color = 'blue') + geom_point() + labs(title="Number of Publication milestones by month", x="Month", y="Publication status update")
+
+pubStatusMonth
+
+```
+
+The month with most publication status updates was October, followed by July, January and August/September. I think that follows the work flow and deadlines of the standard academic year and winter holidays/breaks in the U.S. I thought it was interesting to see how activity changes with the seasons (assuming most of this are in the United States). I also noticed the lull in status updates around March to June, with the spike of activity in October - I believe this is due to the the "lulls" being the months where most work is accomplished and beginning "spikes" where most work was turned in for reviews. It would be in interesting to use a scatterplot to plot all publication statuses across the year(s) and see if there is more approval of publications (or any status) at certain times of the year over others. 
 
 
 
@@ -1036,12 +1038,6 @@ dbListTables(star.dbs)
 
 
 
-
-
-
-
-
-
 Disconnect from both databases
 ```{r}
 
@@ -1051,14 +1047,8 @@ dbDisconnect(star.dbs)
 ```
 
 
-### Part 3 use the OLAP star/snowflake schema to do some (simple) data mining
 
 
 
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
 
