@@ -17,8 +17,6 @@ dbs <- dbConnect(RSQLite::SQLite(), "pubMed0.db")
 
 ### Part 1 Populate relational database with data from an XML document
 
-
-
 ```{r}
 
 path <- "/Users/jeannille/repos/mine_a_database/"
@@ -785,9 +783,6 @@ dbReadTable( star.dbs, "dimJournal")
 
 dbListTables(star.dbs)
 
-#can query here to get artciles per quarter and other facts etc
-
-
 ```
 
 
@@ -885,12 +880,6 @@ dbReadTable( star.dbs, "dimPubDate")
 
 
 
-```{sql connection=star.dbs}
-
-
-```
-
-
 
 Join dim tables to create and populate center fact table of star schema
 ```{sql connection=star.dbs}
@@ -936,25 +925,98 @@ dbReadTable( star.dbs, "factArticle")
 
 In the same schema as the previous step, create and populate a summary fact table that represents number of articles per time period (quarter, year) by author and by journal. Include the image of an updated ERD that contains the fact table. Populate the fact table in R. When building the schema, look a head to Part 3 as the schema is dependent on the eventual OLAP queries.
 
+
+```{sql connection=star.dbs}
+
+--SELECT * FROM dimPubDate
+
+SELECT COUNT(factArticle.PMID) as numOfArticles, dimPubDate.quarter, year FROM factArticle 
+JOIN dimPubDate ON dimPubDate.dateRef = factArticle.dateRef
+GROUP BY dimPubDate.quarter, dimPubDate.year;
+--JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
+--JOIN dimJournal ON factArticle.journalRef = dimJournal.journalRef
+--JOIN dimHistory ON factArticle.historyRef = dimHistory.historyRef
+
+
+
+```
+
+
+
+Query for number of articles per quarter by joining dimension tables on Article fact table
+```{sql connection=star.dbs, output.var = articlesBySeason}
+
+SELECT COUNT(factArticle.PMID) as numberOfArticles, dimPubDate.quarter
+FROM factArticle 
+JOIN dimPubDate ON dimPubDate.dateRef = factArticle.dateRef
+JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
+JOIN dimJournal ON factArticle.journalRef = dimJournal.journalRef
+GROUP BY dimPubDate.quarter;
+
+```
+
+Articles summary including quarter, year, author, journal
+```{sql connection=star.dbs}
+
+SELECT dimAuthor.lastName, dimAuthor.foreName, dimPubDate.quarter FROM factArticle
+JOIN dimAuthor ON factArticle.authorRef = dimAuthor.authorRef
+JOIN dimPubDate ON factArticle.dateRef = dimPubDate.dateRef
+
+```
+
+Seasonal Pattern - Articles published per Season (where quarter 1 is Spring, 2 = Summer, 3 = Fall, 4 = Winter)
+```{r}
+
+viz <- ggplot(data = articlesBySeason, aes(x = quarter, y = numberOfArticles, group = 1 )) + geom_line( color = 'blue') + geom_point() + labs(title="Publications by Season", x="Season", y="Quantity of Articles")
+
+viz
+
+# viz <- ggplot(data = newData, aes(x = strikeYear, y = numOfStrikes, group = 1)) +
+#   geom_point(aes(color=numOfStrikes), alpha=0.9) + geom_line() + 
+#   labs(title= "Birds Strikes Incidents by Year ", subtitle="Years 2000 - 2011", x= "Year", y="Number of Bird Strikes")
+
+
+#articlesBySeason
+
+```
+
+
+Publication status (or activity) by season
+
+
+```{r}
+dbGetQuery(star.dbs, "SELECT * FROM factArticle 
+           JOIN GROUP BY pubStatus")
+```
+
+
+
 Query that sorts by quarter - get from star schema
 ```{r}
 
-
+# (SELECT PMID, quarter FROM (SELECT * FROM dimHistory GROUP BY PMID)
 #numArticleSummary numOfArticles, auarter, year, month (summaryId auto)
 
 #subquery that groups by articles, resulting in 19 unique articles and their history
 to = " SELECT pmid, quarter FROM dimHistory
 GROUP BY PMID "
 
-sqlCmd = " SELECT quarter, COUNT(*) AS 'numOfarticles' FROM (SELECT pmid, quarter FROM dimHistory
-GROUP BY PMID) GROUP BY quarter
-"
+sqlCmd = " SELECT quarter, COUNT(*) AS 'numOfarticles' FROM (SELECT pmid, quarter FROM dimPubDate
+GROUP BY PMID) GROUP BY quarter"
 #get mpid and quarter of each unique article
-# (SELECT PMID, quarter FROM (SELECT * FROM dimHistory GROUP BY PMID)
 
-sqlCmd = "SELECT  FROM dimHistory GROUP BY articleID"
-dbGetQuery(star.dbs, sqlCmd)
 
+byQuarter <- dbGetQuery(star.dbs, sqlCmd)
+byQuarter
+
+dbGetQuery(star.dbs, "SELECT * FROM dimPubDate")
+
+dbGetQuery(star.dbs, "SELECT * FROM factArticle JOIN dimPubDate ON dimPubDate.")
+
+# numOfArticles INTEGER NOT NULL,
+# quarter INTEGER,
+# year INTEGER, 
+# month INTEGER
 
 
 ```
