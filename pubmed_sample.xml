@@ -4804,6 +4804,7 @@
         <NlmUniqueID>100886721</NlmUniqueID>
         <ISSNLinking>1464-4096</ISSNLinking>
       </MedlineJournalInfo>
+
       <ChemicalList>
         <Chemical>
           <RegistryNumber>0</RegistryNumber>
@@ -4859,6 +4860,7 @@
         </MeshHeading>
       </MeshHeadingList>
     </MedlineCitation>
+
     <PubmedData>
       <History>
         <PubMedPubDate PubStatus="aheadofprint">
@@ -4894,6 +4896,7 @@
         <ArticleId IdType="pubmed">21851550</ArticleId>
       </ArticleIdList>
     </PubmedData>
+    
   </PubmedArticle>
   <PubmedArticle>
     <MedlineCitation Owner="NLM" Status="MEDLINE">

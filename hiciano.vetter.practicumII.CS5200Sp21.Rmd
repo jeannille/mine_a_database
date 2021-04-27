@@ -175,6 +175,7 @@ for (m in 1:19)
 }
 
 ```
+
 ```{r}
 #commented out so not seen in a knitted file
 newArticle.df
@@ -544,7 +545,7 @@ FROM authorData
 
 ```{sql connection=dbs}
 
-SELECT * from Authorship LIMIT 10
+SELECT DISTINCT * from Authorship
 ```
 
 
@@ -583,13 +584,16 @@ DROP TABLE IF EXISTS dimHistory;
 ```
 
 ```{sql connection=star.dbs}
-DROP TABLE IF EXISTS articleFact;
+DROP TABLE IF EXISTS factArticle;
 
 ```
 
+tracks number of articles per quarter, month, year
+```{sql connection=star.dbs}
+DROP TABLE IF EXISTS numArticleSummary;
+```
 
 ## realize star schema tables
-
 ```{sql connection=star.dbs}
 CREATE TABLE IF NOT EXISTS dimAuthor(
   authorRef INTEGER NOT NULL, 
@@ -600,20 +604,20 @@ CREATE TABLE IF NOT EXISTS dimAuthor(
   affiliation TEXT NULL, 
   PRIMARY KEY(authorRef) 
   );
-
 ```
 
 #pubMedDate col
 ```{sql connection=star.dbs}
 CREATE TABLE IF NOT EXISTS dimPubDate(
-  dateRef INTEGER,
+  dateRef INTEGER PRIMARY KEY AUTOINCREMENT,
+  PMID INTEGER NULL,
+  datePublished TEXT,
+  month INTEGER NULL,
   year INTEGER NULL,
-  day INTEGER NULL,
-  PRIMARY KEY (dateRef)
+  quarter INTEGER
   );
 
 ```
-
 
 update this to assocate with every article (even if multiple articles published to same journal, dimension table
 should be in context of specific article, center table?, or could just grab from article itself)
@@ -636,10 +640,9 @@ may need to add pubStatus later
 
 CREATE TABLE IF NOT EXISTS dimHistory(
   historyRef INTEGER PRIMARY KEY AUTOINCREMENT,
-  PMID INTEGER NULL,
-  pubStatus INTEGER NULL,
-  datePublished TEXT,
-  quarter INTEGER NULL
+  articleId INTEGER NULL,
+  articleTitle TEXT NULL,
+  pubStatus INTEGER NULL
   );
 
 ```
@@ -648,8 +651,9 @@ CREATE TABLE IF NOT EXISTS dimHistory(
 compound key - (pmid, authorRef) connect author to specific article
 ```{sql connection=star.dbs}
 
-CREATE TABLE IF NOT EXISTS articleFact(
+CREATE TABLE IF NOT EXISTS factArticle(
   PMID INTEGER NOT NULL,
+  aTitle TEXT,
   authorRef INTEGER NOT NULL, 
   journalRef INTEGER NOT NULL,
   dateRef INTEGER NOT NULL,
@@ -663,6 +667,19 @@ CREATE TABLE IF NOT EXISTS articleFact(
 
 ```
 
+
+```{sql connection=star.dbs}
+
+CREATE TABLE IF NOT EXISTS numArticleSummary(
+  summaryId INTEGER,
+  numOfArticles INTEGER NOT NULL,
+  quarter INTEGER,
+  year INTEGER, 
+  month INTEGER,
+  PRIMARY KEY (summaryId)
+);
+
+```
 
 
 ```{r}
@@ -689,7 +706,7 @@ authorRef
 
 sqlCmd = "SELECT foreName FROM Author"
 foreName = dbGetQuery(dbs, sqlCmd)
-#foreName
+foreName
 
 sqlCmd = "SELECT lastName FROM Author"
 lastName = dbGetQuery(dbs, sqlCmd)
@@ -773,15 +790,52 @@ SELECT History.PMID AS PMID,
 
 ```
 
-```{sql connection=}
-
-```
-
+Populate article fact table now that dimension/context tables have been populated 
+output.var="df_factArticle"
 
 
 ```{r}
-df_dimHistory
+
+sqlCmd = "SELECT title FROM Article "
+title = dbGetQuery(dbs, sqlCmd)
+title
+
+sqlCmd = "SELECT historyRef FROM dimHistory "
+historyRef = dbGetQuery(star.dbs, sqlCmd)
+#historyRef
+
+sqlCmd = "SELECT DISTINCT authorRef FROM dimAuthor "
+authorRef = dbGetQuery(star.dbs, sqlCmd)
+authorRef
+
+sqlCmd = "SELECT historyRef FROM dimHistory "
+historyRef = dbGetQuery(star.dbs, sqlCmd)
+historyRef
+
+sqlCmd = "SELECT journalRef FROM dimJournal"
+journalRef = dbGetQuery(star.dbs, sqlCmd)
+journalRef
+
+sqlCmd = "SELECT * FROM dimPubDate"
+dateRef = dbGetQuery(star.dbs, sqlCmd)
+dateRef
+
+df_factArt = cbind(authorRef,journalRef,dateRef,historyRef)
+head(df_factArt)
+
+dbWriteTable( star.dbs, "dimJournal", df_Journal, field.types = NULL, row.names = FALSE, 
+              overwrite = FALSE, append = TRUE, allow.keywords = FALSE )
+
+dbReadTable( star.dbs, "dimJournal")
+
+dbListTables(star.dbs)
+
+#can query here to get artciles per quarter and other facts etc
+
+
 ```
+
+
 
 
 
@@ -799,15 +853,20 @@ SELECT
   FROM History
 
 ```
+
+
+
+Query database to populate dimPubDate table (date dimension table)
+## Output dimensoon table: dimHistory articleId, articleTitle, pubStatus
 ```{r}
 
 sqlCmd = "SELECT day FROM History"
 Day0 = dbGetQuery(dbs, sqlCmd)
-Day0
+#Day0
 
 sqlCmd = "SELECT month FROM History"
 Month0 = dbGetQuery(dbs, sqlCmd)
-Month0
+#Month0
 
 sqlCmd = "SELECT year FROM History"
 Year0 = dbGetQuery(dbs, sqlCmd)
@@ -815,52 +874,94 @@ Year0 = dbGetQuery(dbs, sqlCmd)
 sqlCmd = "SELECT pubStatus FROM History"
 pubstatus = dbGetQuery(dbs, sqlCmd)
 
+#create date string from day month yr columns queried
 dfTest<-cbind(Day0,Month0,Year0, stringsAsFactors = FALSE)
+#dfTest
 
+#append full date column to dfTest, redult df of article stages by dates, mo, yr, day 
 dfTest$date <- paste(dfTest$day,dfTest$month,dfTest$year, sep = '-')
 date1 <- data.frame(dfTest$date)
 
-#date1 =as.character(date1)
-#date1 <- parse_date(date1, format = "%d-/%m-/%Y")
 PMID <- df_dimHistory$PMID
+#PMID
 quarter <- df_dimHistory$quarter
-quarter
+#quarter
 
-df_pubDateStar <- data.frame(cbind(date1,quarter,pubstatus,PMID))
-df_pubDateStar
+#probably not the best way to bind but every pub stage of an article (pubstatus) to align with title
+#in order to add to history, i think it can be queries for useful history timeline of each article
+sqlCmd = "SELECT History.pubStatus, Article.title
+FROM History
+JOIN Article ON History.PMID = Article.PMID;"
+pubAndTitle = dbGetQuery(dbs, sqlCmd)
+pubAndTitle
 
-#convert date columsn into one to date format for quarter
-names(df_pubDateStar)
+sqlCmd = "SELECT title FROM Article"
+articleTitle = dbGetQuery(dbs, sqlCmd)
 
-#df_pubDateStar <- df_pubDateStar %>% rename(pubstatus = pubStatus)
-df_pubDateStar <- df_pubDateStar %>% rename(datePublished = dfTest.date)
+#create dataframe for dimHistory dimension table
+df_dHistory <- data.frame(cbind(PMID,pubAndTitle))
+df_dHistory<- df_dHistory %>% rename(articleId = PMID)
+df_dHistory<- df_dHistory %>% rename(articleTitle = title)
+df_dHistory
 
-head(df_pubDateStar)
+#create dataframe for pubDate dimension table
+df_pubDateStar2 <- data.frame(cbind(PMID,date1,Month0,Year0,quarter))
+df_pubDateStar2 <- df_pubDateStar2 %>% rename(datePublished = dfTest.date)
+#checking headers
+#names(df_pubDateStar)
+df_pubDateStar2
 
-dbWriteTable( star.dbs, "dimHistory", df_pubDateStar, field.types = NULL, row.names = FALSE, 
+# insert pubdate df to pubDate dimension table of star schema
+dbWriteTable( star.dbs, "dimPubDate", df_pubDateStar2, field.types = NULL, row.names = FALSE,
                overwrite = FALSE, append = TRUE, allow.keywords = FALSE )
-# 
+
+
+dbReadTable( star.dbs, "dimPubDate")
+```
+
+## Dimensoon table: dimPubDate
+Populate the dimension pubDate table of star schema and read the table to confirm its populated
+Fields: historyRef, articleId (pmid), articleTitle, pubStatus
+```{r}
+# insert History df to history dimension table of star schema
+dbWriteTable( star.dbs, "dimHistory", df_dHistory, field.types = NULL, row.names = FALSE,
+               overwrite = FALSE, append = TRUE, allow.keywords = FALSE )
+
 dbReadTable( star.dbs, "dimHistory")
 
-
 ```
 
-
-```{r}
-#check if day-month translated to date 
-head(dfTest)
-```
 
 
 In the same schema as the previous step, create and populate a summary fact table that represents number of articles per time period (quarter, year) by author and by journal. Include the image of an updated ERD that contains the fact table. Populate the fact table in R. When building the schema, look a head to Part 3 as the schema is dependent on the eventual OLAP queries.
 
-Create query that sorts by quarter - get from star schema
+Query that sorts by quarter - get from star schema
 ```{r}
 
-sqlCmd = "SELECT * FROM dimHistory "
+#subquery that groups by articles, resulting in 19 unique articles and their history
+to = " SELECT pmid, quarter FROM dimHistory
+GROUP BY PMID "
+
+sqlCmd = " SELECT quarter, COUNT(*) AS 'numOfarticles' FROM (SELECT pmid, quarter FROM dimHistory
+GROUP BY PMID) GROUP BY quarter
+"
+
+#get mpid and quarter of each unique article
+# (SELECT PMID, quarter FROM (SELECT * FROM dimHistory GROUP BY PMID)
+
 dbGetQuery(star.dbs, sqlCmd)
 
 ```
+
+
+
+
+```{r}
+dbGetQuery(dbs, 'SELECT * FROM History')
+```
+
+
+
 
 
 
